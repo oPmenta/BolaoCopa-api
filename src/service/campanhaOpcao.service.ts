@@ -1,5 +1,5 @@
 import { prisma } from '../database/prismaClient';
-import { CriarCampanhaOpcaoInputDTO, DefinirResultadoInputDTO } from '../dtos/campanhaOpcao';
+import { CriarCampanhaOpcaoInputDTO, DefinirResultadoInputDTO } from '../dtos/campanhaOpcao.dto';
 
 export class CampanhaOpcaoService {
   async criar({ campanha_id, descricao }: CriarCampanhaOpcaoInputDTO) {
