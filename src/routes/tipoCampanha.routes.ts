@@ -1,0 +1,51 @@
+import { Router } from 'express';
+import { TipoCampanhaController } from '../controller/tipoCampanha.controller';
+
+const tipoCampanhaRoutes = Router();
+const tipoCampanhaController = new TipoCampanhaController();
+
+/**
+ * @swagger
+ * /tipos-campanha:
+ *   post:
+ *     summary: Cadastra um novo tipo de campanha
+ *     tags:
+ *       - Tipos de Campanha
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - descricao
+ *             properties:
+ *               descricao:
+ *                 type: string
+ *                 example: "Futebol"
+ *     responses:
+ *       201:
+ *         description: Tipo de campanha criado com sucesso!
+ *       400:
+ *         description: "Erro de validação (ex: descrição vazia)"
+ *       500:
+ *         description: Erro interno do servidor
+ */
+tipoCampanhaRoutes.post('/tipos-campanha', tipoCampanhaController.criar);
+
+/**
+ * @swagger
+ * /tipos-campanha:
+ *   get:
+ *     summary: Lista todos os tipos de campanha cadastrados
+ *     tags:
+ *       - Tipos de Campanha
+ *     responses:
+ *       200:
+ *         description: Lista retornada com sucesso!
+ *       500:
+ *         description: Erro interno do servidor
+ */
+tipoCampanhaRoutes.get('/tipos-campanha', tipoCampanhaController.listar);
+
+export { tipoCampanhaRoutes };
