@@ -9,7 +9,7 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
     });
   }
 
-  console.error("❌ ERRO INTERNO:", err);
+  console.error("ERRO INTERNO:", err);
 
   return res.status(500).json({
     status: 'error',

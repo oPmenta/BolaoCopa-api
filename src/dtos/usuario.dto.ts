@@ -3,9 +3,9 @@ export interface CriarUsuarioInputDTO {
   cpf: string;
   email: string;
   telefone: string;
-  tipo_usuario: string;
-  senha:  string;
-  status: string;
+  senha: string;
+  tipo_usuario?: string;
+  status?: string;
 }
 
 // AINDA NAO ESTA SENDO UTILIZADO, MAS PODE SER USADO PARA DEFINIR O FORMATO DE DADOS QUE SAEM DA API

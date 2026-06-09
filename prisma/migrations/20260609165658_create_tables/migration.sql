@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');
+
 -- CreateTable
 CREATE TABLE "usuario" (
     "id" TEXT NOT NULL,
@@ -5,7 +8,7 @@ CREATE TABLE "usuario" (
     "cpf" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "telefone" TEXT NOT NULL,
-    "tipo_usuario" TEXT NOT NULL DEFAULT 'USER',
+    "tipo_usuario" "Role" NOT NULL DEFAULT 'USER',
     "senha" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ATIVO',
     "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -31,7 +34,9 @@ CREATE TABLE "campanha" (
     "valor_bolao" DOUBLE PRECISION NOT NULL,
     "codigo_campanha" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ABERTA',
+    "privacidade" BOOLEAN NOT NULL DEFAULT false,
     "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "criador_id" TEXT NOT NULL,
     "tipo_campanha_id" TEXT NOT NULL,
 
     CONSTRAINT "campanha_pkey" PRIMARY KEY ("id")
@@ -80,6 +85,9 @@ CREATE UNIQUE INDEX "campanha_codigo_campanha_key" ON "campanha"("codigo_campanh
 
 -- CreateIndex
 CREATE UNIQUE INDEX "campanha_opcao_campanha_id_descricao_key" ON "campanha_opcao"("campanha_id", "descricao");
+
+-- AddForeignKey
+ALTER TABLE "campanha" ADD CONSTRAINT "campanha_criador_id_fkey" FOREIGN KEY ("criador_id") REFERENCES "usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "campanha" ADD CONSTRAINT "campanha_tipo_campanha_id_fkey" FOREIGN KEY ("tipo_campanha_id") REFERENCES "tipo_campanha"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

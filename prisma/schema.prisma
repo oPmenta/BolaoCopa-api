@@ -12,12 +12,12 @@ model usuario {
   cpf          String   @unique
   email        String   @unique
   telefone     String
-  tipo_usuario String   @default("USER")
+  tipo_usuario Role      @default(USER)
   senha        String
   status       String   @default("ATIVO")
   criadoEm     DateTime @default(now())
-
   apostas      aposta[]
+  campanhas    campanha[]
 }
 
 model tipo_campanha {
@@ -35,8 +35,10 @@ model campanha {
   valor_bolao      Float
   codigo_campanha  String          @unique
   status           String          @default("ABERTA")
+  privacidade      Boolean         @default(false)
   criadoEm         DateTime        @default(now())
-  
+  criador_id       String
+  criador          usuario         @relation(fields: [criador_id], references: [id])
   tipo_campanha_id String
   tipo_campanha    tipo_campanha   @relation(fields: [tipo_campanha_id], references: [id])
   opcoes           campanha_opcao[]
@@ -73,4 +75,9 @@ model aposta {
   dt_criacao        DateTime       @default(now())
   status            String         @default("PENDENTE")
   comprovante       String?
+}
+
+enum Role {
+  ADMIN
+  USER
 }

@@ -10,6 +10,7 @@ import { tipoCampanhaRoutes } from './routes/tipoCampanha.routes';
 import { campanhaRoutes } from './routes/campanha.routes';
 import { opcaoRoutes } from './routes/campanhaOpcao.routes';
 import { meioPagamentoRoutes } from './routes/meioPagamento.routes';
+import { apostaRoutes } from './routes/aposta.routes';
 
 const app = express();
 
@@ -22,9 +23,10 @@ app.use(tipoCampanhaRoutes);
 app.use(campanhaRoutes);
 app.use(opcaoRoutes);
 app.use(meioPagamentoRoutes);
+app.use(apostaRoutes);
 
 app.get('/ping', (req: Request, res: Response) => {
-  res.json({ message: 'Pong! Servidor do Bolão está online ⚽' });
+  res.json({ message: 'Pong! Servidor do Bolão está online!' });
 });
 
 app.use(errorHandler);

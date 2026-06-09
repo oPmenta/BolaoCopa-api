@@ -21,7 +21,7 @@ export class CampanhaController {
         }
     }
 
-    async listar(req: Request, res: Response): Promise<Response> {
+    async listarTodas(req: Request, res: Response): Promise<Response> {
         try {
             const campanhas = await campanhaService.listarTodas();
             return res.status(200).json({
@@ -33,6 +33,31 @@ export class CampanhaController {
                 success: false,
                 message: 'Erro interno ao listar as campanhas.'
             });
+        }
+    }
+
+    async listarPublicas(req: Request, res: Response): Promise<Response> {
+        try {
+            const campanhasPublicas = await campanhaService.listarApenasPublicas();
+            return res.status(200).json({
+                success: true,
+                data: campanhasPublicas
+            });
+        } catch (error: any) {
+            return res.status(500).json({
+                success: false,
+                message: 'Erro interno ao listar as campanhas públicas.'
+            });
+        }
+    }
+
+    async buscarPorCodigo(req: Request, res: Response): Promise<Response> {
+        try {
+            const { codigo } = req.params;
+            const campanha = await campanhaService.buscarPorCodigo(String(codigo));
+            return res.status(200).json({ success: true, data: campanha });
+        } catch (error: any) {
+            return res.status(404).json({ success: false, message: error.message });
         }
     }
 

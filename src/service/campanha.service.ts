@@ -1,5 +1,6 @@
 import { prisma } from '../database/prismaClient';
 import { CriarCampanhaInputDTO } from '../dtos/campanha.dto';
+import { Role } from '@prisma/client';
 
 export class CampanhaService {
     async criar(data: CriarCampanhaInputDTO) {
@@ -10,11 +11,26 @@ export class CampanhaService {
             taxa_operacional,
             valor_bolao,
             codigo_campanha,
-            tipo_campanha_id
+            tipo_campanha_id,
+            criador_id,
+            privacidade
         } = data;
 
-        if (!nome || !dt_inicio || !dt_fim || !codigo_campanha || !tipo_campanha_id) {
-            throw new Error('Todos os campos obrigatórios da campanha devem ser preenchidos.');
+        if (!nome || !dt_inicio || !dt_fim || !codigo_campanha || !tipo_campanha_id || !criador_id) {
+            throw new Error('Todos os campos obrigatórios da campanha devem ser preenchidos, incluindo o criador.');
+        }
+
+        const criadorExiste = await prisma.usuario.findUnique({
+            where: { id: criador_id },
+        });
+
+        if (!criadorExiste) {
+            throw new Error('O usuário criador informado não existe no sistema.');
+        }
+
+        let privacidadeDefinida = privacidade ?? false;
+        if (criadorExiste.tipo_usuario === Role.USER) {
+            privacidadeDefinida = true;
         }
 
         const dataInicio = new Date(dt_inicio);
@@ -49,6 +65,8 @@ export class CampanhaService {
                 valor_bolao: Number(valor_bolao),
                 codigo_campanha: codigo_campanha.toUpperCase().trim(),
                 status: 'ABERTA',
+                privacidade: privacidadeDefinida,
+                criador_id,
                 tipo_campanha_id,
             },
         });
@@ -62,6 +80,38 @@ export class CampanhaService {
                 tipo_campanha: true,
             },
         });
+    }
+
+    async listarApenasPublicas() {
+        return await prisma.campanha.findMany({
+            where: {
+                privacidade: false,
+                status: 'ABERTA'
+            },
+            include: {
+                tipo_campanha: true,
+            }
+        });
+    }
+
+    async buscarPorCodigo(codigo: string) {
+        if (!codigo) {
+            throw new Error('O código de convite é obrigatório para realizar a busca.');
+        }
+
+        const campanha = await prisma.campanha.findUnique({
+            where: { codigo_campanha: codigo.toUpperCase().trim() },
+            include: {
+                tipo_campanha: true,
+                opcoes: true,
+            }
+        });
+
+        if (!campanha) {
+            throw new Error('Nenhum bolão ou campanha foi localizado com este código de convite.');
+        }
+
+        return campanha;
     }
 
     async atualizarStatus(id: string, novoStatus: string) {
