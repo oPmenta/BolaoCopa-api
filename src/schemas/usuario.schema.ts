@@ -5,7 +5,7 @@ export const CriarUsuarioSchema = z.object({
   cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido. Use formato: 123.456.789-00'),
   email: z.string().email('E-mail inválido'),
   telefone: z.string().min(10, 'Telefone inválido'),
-  senha: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+  senha: z.string().min(5, 'Senha deve ter no mínimo 5 caracteres'),
   tipo_usuario: z.enum(['ADMIN', 'USER']).optional().default('USER'),
   status: z.string().optional().default('ATIVO')
 });

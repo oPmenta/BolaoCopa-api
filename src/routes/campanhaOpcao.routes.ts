@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { CampanhaOpcaoController } from '../controller/campanhaOpcao.controller';
 import { validateRequest } from '../middlewares/validateSchema';
 import { DefinirResultadoSchema } from '../schemas/campanhaOpcao.schema';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const opcaoRoutes = Router();
 const opcaoController = new CampanhaOpcaoController();
@@ -13,6 +14,8 @@ const opcaoController = new CampanhaOpcaoController();
  *     summary: Lista todas as opções disponíveis de uma campanha específica
  *     tags:
  *       - Campanhas (Opções)
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: idCampanha
@@ -23,7 +26,7 @@ const opcaoController = new CampanhaOpcaoController();
  *       200:
  *         description: Lista de opções retornada.
  */
-opcaoRoutes.get('/campanhas/:idCampanha/opcoes', opcaoController.listar);
+opcaoRoutes.get('/campanhas/:idCampanha/opcoes', authMiddleware, opcaoController.listar);
 
 /**
  * @swagger
@@ -32,6 +35,8 @@ opcaoRoutes.get('/campanhas/:idCampanha/opcoes', opcaoController.listar);
  *     summary: Define a opção vencedora da campanha (Apenas campanhas encerradas)
  *     tags:
  *       - Campanhas (Opções)
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: idCampanha
@@ -56,6 +61,6 @@ opcaoRoutes.get('/campanhas/:idCampanha/opcoes', opcaoController.listar);
  *       400:
  *         description: Erro nas regras de negócio.
  */
-opcaoRoutes.patch('/campanhas/:idCampanha/definir-resultado', validateRequest(DefinirResultadoSchema), opcaoController.definirResultado);
+opcaoRoutes.patch('/campanhas/:idCampanha/definir-resultado', authMiddleware, validateRequest(DefinirResultadoSchema), opcaoController.definirResultado);
 
 export { opcaoRoutes };

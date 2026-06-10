@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { TipoCampanhaController } from '../controller/tipoCampanha.controller';
 import { validateRequest } from '../middlewares/validateSchema';
 import { CriarTipoCampanhaSchema, AtualizarStatusTipoCampanhaSchema } from '../schemas/tipoCampanha.schema';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const tipoCampanhaRoutes = Router();
 const tipoCampanhaController = new TipoCampanhaController();
@@ -13,6 +14,8 @@ const tipoCampanhaController = new TipoCampanhaController();
  *     summary: Cadastra um novo tipo de campanha
  *     tags:
  *       - Tipos de Campanha
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -33,7 +36,7 @@ const tipoCampanhaController = new TipoCampanhaController();
  *       500:
  *         description: Erro interno do servidor
  */
-tipoCampanhaRoutes.post('/tipos-campanha', validateRequest(CriarTipoCampanhaSchema), tipoCampanhaController.criar);
+tipoCampanhaRoutes.post('/tipos-campanha', authMiddleware, validateRequest(CriarTipoCampanhaSchema), tipoCampanhaController.criar);
 
 /**
  * @swagger
@@ -42,13 +45,15 @@ tipoCampanhaRoutes.post('/tipos-campanha', validateRequest(CriarTipoCampanhaSche
  *     summary: Lista todos os tipos de campanha cadastrados
  *     tags:
  *       - Tipos de Campanha
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista retornada com sucesso!
  *       500:
  *         description: Erro interno do servidor
  */
-tipoCampanhaRoutes.get('/tipos-campanha', tipoCampanhaController.listar);
+tipoCampanhaRoutes.get('/tipos-campanha', authMiddleware, tipoCampanhaController.listar);
 
 /**
  * @swagger
@@ -57,6 +62,8 @@ tipoCampanhaRoutes.get('/tipos-campanha', tipoCampanhaController.listar);
  *     summary: Atualiza o status de um tipo de campanha
  *     tags:
  *       - Tipos de Campanha
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -82,6 +89,6 @@ tipoCampanhaRoutes.get('/tipos-campanha', tipoCampanhaController.listar);
  *       400:
  *         description: Erro ao atualizar o status.
  */
-tipoCampanhaRoutes.patch('/tipos-campanha/:id', validateRequest(AtualizarStatusTipoCampanhaSchema), tipoCampanhaController.atualizarStatus);
+tipoCampanhaRoutes.patch('/tipos-campanha/:id', authMiddleware, validateRequest(AtualizarStatusTipoCampanhaSchema), tipoCampanhaController.atualizarStatus);
 
 export { tipoCampanhaRoutes };

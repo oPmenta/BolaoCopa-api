@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { CampanhaController } from '../controller/campanha.controller';
 import { validateRequest } from '../middlewares/validateSchema';
 import { CriarCampanhaSchema, AtualizarStatusCampanhaSchema } from '../schemas/campanha.schema';
+import { authMiddleware } from '../middlewares/authMiddleware'; 
 
 const campanhaRoutes = Router();
 const campanhaController = new CampanhaController();
@@ -13,6 +14,8 @@ const campanhaController = new CampanhaController();
  *     summary: "Cria uma nova campanha/bolão com suas opções de aposta"
  *     tags:
  *       - Campanhas
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -72,7 +75,7 @@ const campanhaController = new CampanhaController();
  *       400:
  *         description: "Erros de validação (ex: datas incorretas, código duplicado, menos de 2 opções)."
  */
-campanhaRoutes.post('/campanhas', validateRequest(CriarCampanhaSchema), campanhaController.criar);
+campanhaRoutes.post('/campanhas', authMiddleware, validateRequest(CriarCampanhaSchema), campanhaController.criar);
 
 /**
  * @swagger
@@ -81,13 +84,15 @@ campanhaRoutes.post('/campanhas', validateRequest(CriarCampanhaSchema), campanha
  *     summary: "Lista todas as campanhas existentes (Visão geral do Admin)"
  *     tags:
  *       - Campanhas
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: "Campanhas listadas com sucesso!"
  *       500:
  *         description: "Erro interno do servidor"
  */
-campanhaRoutes.get('/campanhas', campanhaController.listarTodas);
+campanhaRoutes.get('/campanhas', authMiddleware, campanhaController.listarTodas);
 
 /**
  * @swagger
@@ -96,13 +101,15 @@ campanhaRoutes.get('/campanhas', campanhaController.listarTodas);
  *     summary: "Lista apenas as campanhas públicas e abertas"
  *     tags:
  *       - Campanhas
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: "Campanhas públicas localizadas com sucesso!"
  *       500:
  *         description: "Erro interno do servidor"
  */
-campanhaRoutes.get('/campanhas/publicas', campanhaController.listarPublicas);
+campanhaRoutes.get('/campanhas/publicas', authMiddleware, campanhaController.listarPublicas);
 
 /**
  * @swagger
@@ -111,6 +118,8 @@ campanhaRoutes.get('/campanhas/publicas', campanhaController.listarPublicas);
  *     summary: "Busca uma campanha privada pelo código de convite"
  *     tags:
  *       - Campanhas
+ *     security:
+ *     - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: codigo
@@ -123,7 +132,7 @@ campanhaRoutes.get('/campanhas/publicas', campanhaController.listarPublicas);
  *       404:
  *         description: "Código de convite não encontrado."
  */
-campanhaRoutes.get('/campanhas/codigo/:codigo', campanhaController.buscarPorCodigo);
+campanhaRoutes.get('/campanhas/codigo/:codigo', authMiddleware, campanhaController.buscarPorCodigo);
 
 /**
  * @swagger
@@ -132,6 +141,8 @@ campanhaRoutes.get('/campanhas/codigo/:codigo', campanhaController.buscarPorCodi
  *     summary: "Atualiza o status de uma campanha (ABERTA, FECHADA, ENCERRADA)"
  *     tags:
  *       - Campanhas
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: idCampanha
@@ -157,6 +168,6 @@ campanhaRoutes.get('/campanhas/codigo/:codigo', campanhaController.buscarPorCodi
  *       400:
  *         description: "Erro de validação ou ID não encontrado."
  */
-campanhaRoutes.patch('/campanhas/:idCampanha/status', validateRequest(AtualizarStatusCampanhaSchema), campanhaController.atualizarStatus);
+campanhaRoutes.patch('/campanhas/:idCampanha/status', authMiddleware, validateRequest(AtualizarStatusCampanhaSchema), campanhaController.atualizarStatus);
 
 export { campanhaRoutes };

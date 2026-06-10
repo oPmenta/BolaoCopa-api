@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { MeioPagamentoController } from '../controller/meioPagamento.controller';
 import { validateRequest } from '../middlewares/validateSchema';
 import { CriarMeioPagamentoSchema, AtualizarStatusMeioPagamentoSchema } from '../schemas/meioPagamento.schema';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const meioPagamentoRoutes = Router();
 const meioPagamentoController = new MeioPagamentoController();
@@ -13,6 +14,8 @@ const meioPagamentoController = new MeioPagamentoController();
  *     summary: Cadastra um novo meio de pagamento
  *     tags:
  *       - Meios de Pagamento
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -31,7 +34,7 @@ const meioPagamentoController = new MeioPagamentoController();
  *       400:
  *         description: Erro de validação ou duplicidade.
  */
-meioPagamentoRoutes.post('/meios-pagamento', validateRequest(CriarMeioPagamentoSchema), meioPagamentoController.criar);
+meioPagamentoRoutes.post('/meios-pagamento', authMiddleware, validateRequest(CriarMeioPagamentoSchema), meioPagamentoController.criar);
 
 /** 
  * @swagger
@@ -40,12 +43,14 @@ meioPagamentoRoutes.post('/meios-pagamento', validateRequest(CriarMeioPagamentoS
  *     summary: Lista todos os meios de pagamento disponíveis
  *     tags:
  *       - Meios de Pagamento
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista retornada com sucesso.
  */
 
-meioPagamentoRoutes.get('/meios-pagamento', meioPagamentoController.listar);
+meioPagamentoRoutes.get('/meios-pagamento', authMiddleware, meioPagamentoController.listar);
 
 /**
  * @swagger
@@ -54,6 +59,8 @@ meioPagamentoRoutes.get('/meios-pagamento', meioPagamentoController.listar);
  *     summary: Atualiza o status de um meio de pagamento
  *     tags:
  *       - Meios de Pagamento
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -79,6 +86,6 @@ meioPagamentoRoutes.get('/meios-pagamento', meioPagamentoController.listar);
  *       400:
  *         description: Erro ao atualizar o status.
  */
-meioPagamentoRoutes.patch('/meios-pagamento/:id', validateRequest(AtualizarStatusMeioPagamentoSchema), meioPagamentoController.atualizarStatus);
+meioPagamentoRoutes.patch('/meios-pagamento/:id', authMiddleware, validateRequest(AtualizarStatusMeioPagamentoSchema), meioPagamentoController.atualizarStatus);
 
 export { meioPagamentoRoutes };

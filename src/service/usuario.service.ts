@@ -55,7 +55,10 @@ export class UsuarioService {
     }
 
     const token = jwt.sign(
-      { usuarioId: usuario.id },
+      { usuarioId: usuario.id,
+        nome: usuario.nome,
+        tipo_usuario: usuario.tipo_usuario,
+       },
       jwtConfig.secret,
       { expiresIn: jwtConfig.expiresIn } as any
     );

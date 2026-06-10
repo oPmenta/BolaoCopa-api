@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ApostaController } from '../controller/aposta.controller';
 import { validateRequest } from '../middlewares/validateSchema';
 import { CriarApostaSchema } from '../schemas/aposta.schema';
+import { authMiddleware } from '../middlewares/authMiddleware'; 
 
 const apostaRoutes = Router();
 const apostaController = new ApostaController();
@@ -13,6 +14,8 @@ const apostaController = new ApostaController();
  *     summary: Registra uma nova aposta (Bilhete) em uma campanha aberta
  *     tags:
  *       - Apostas
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -39,7 +42,7 @@ const apostaController = new ApostaController();
  *       400:
  *         description: Erro de validação ou campanha fechada/encerrada.
  */
-apostaRoutes.post('/apostas', validateRequest(CriarApostaSchema), apostaController.criar);
+apostaRoutes.post('/apostas', authMiddleware, validateRequest(CriarApostaSchema), apostaController.criar);
 
 /**
  * @swagger
@@ -48,6 +51,8 @@ apostaRoutes.post('/apostas', validateRequest(CriarApostaSchema), apostaControll
  *     summary: Lista o histórico de apostas de um usuário específico
  *     tags:
  *       - Apostas
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: idUsuario
@@ -60,6 +65,6 @@ apostaRoutes.post('/apostas', validateRequest(CriarApostaSchema), apostaControll
  *       500:
  *         description: Erro interno ao procurar o histórico.
  */
-apostaRoutes.get('/apostas/usuario/:idUsuario', apostaController.listarPorUsuario);
+apostaRoutes.get('/apostas/usuario/:idUsuario', authMiddleware, apostaController.listarPorUsuario);
 
 export { apostaRoutes };
