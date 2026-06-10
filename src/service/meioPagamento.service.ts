@@ -32,7 +32,7 @@ export class MeioPagamentoService {
         return await prisma.meio_pagamento.findMany();
     }
 
-    async atualizarStatus(id: string, novoStatus: string) {
+    async atualizarStatus(id: number, novoStatus: string) {
         if (!id || !novoStatus) {
             throw new Error('ID e status são obrigatórios.');
         }

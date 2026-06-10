@@ -51,7 +51,7 @@ export class ApostaService {
         return novaAposta;
     }
 
-    async listarPorUsuario(usuario_id: string) {
+    async listarPorUsuario(usuario_id: number) {
         return await prisma.aposta.findMany({
             where: { usuario_id },
             include: {

@@ -13,11 +13,16 @@ export class CampanhaService {
             codigo_campanha,
             tipo_campanha_id,
             criador_id,
-            privacidade
+            privacidade,
+            opcoes
         } = data;
 
         if (!nome || !dt_inicio || !dt_fim || !codigo_campanha || !tipo_campanha_id || !criador_id) {
             throw new Error('Todos os campos obrigatórios da campanha devem ser preenchidos, incluindo o criador.');
+        }
+
+        if (!opcoes || opcoes.length < 2) {
+            throw new Error('A campanha deve ter pelo menos 2 opções de aposta.');
         }
 
         const criadorExiste = await prisma.usuario.findUnique({
@@ -60,22 +65,41 @@ export class CampanhaService {
             throw new Error('Este código de campanha já está em uso.');
         }
 
-        const novaCampanha = await prisma.campanha.create({
-            data: {
-                nome,
-                dt_inicio: dataInicio,
-                dt_fim: dataFim,
-                taxa_operacional: Number(taxa_operacional),
-                valor_bolao: Number(valor_bolao),
-                codigo_campanha: codigo_campanha.toUpperCase().trim(),
-                status: 'ABERTA',
-                privacidade: privacidadeDefinida,
-                criador_id,
-                tipo_campanha_id,
-            },
+        // Usando transação para criar campanha + opções
+        const result = await prisma.$transaction(async (tx) => {
+            const novaCampanha = await tx.campanha.create({
+                data: {
+                    nome,
+                    dt_inicio: dataInicio,
+                    dt_fim: dataFim,
+                    taxa_operacional: Number(taxa_operacional),
+                    valor_bolao: Number(valor_bolao),
+                    codigo_campanha: codigo_campanha.toUpperCase().trim(),
+                    status: 'ABERTA',
+                    privacidade: privacidadeDefinida,
+                    criador_id,
+                    tipo_campanha_id,
+                },
+            });
+
+            // Criar todas as opções
+            await tx.campanha_opcao.createMany({
+                data: opcoes.map(descricao => ({
+                    campanha_id: novaCampanha.id,
+                    descricao: descricao.trim(),
+                    status: 'ATIVO',
+                    eh_resultado_final: false,
+                })),
+            });
+
+            // Retornar campanha com as opções incluídas
+            return await tx.campanha.findUnique({
+                where: { id: novaCampanha.id },
+                include: { opcoes: true },
+            });
         });
 
-        return novaCampanha;
+        return result;
     }
 
     async listarTodas() {
@@ -118,7 +142,7 @@ export class CampanhaService {
         return campanha;
     }
 
-    async atualizarStatus(id: string, novoStatus: string) {
+    async atualizarStatus(id: number, novoStatus: string) {
         const statusPermitidos = ['ABERTA', 'FECHADA', 'ENCERRADA'];
         const statusFormatado = novoStatus.toUpperCase().trim();
 

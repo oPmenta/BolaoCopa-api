@@ -24,10 +24,14 @@ export class MeioPagamentoController {
 
   async atualizarStatus(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const id = Number(req.params.id);
       const { status } = req.body;
 
-      const meioAtualizado = await meioPagamentoService.atualizarStatus(String(id), String(status));
+      if (isNaN(id)) {
+        return res.status(400).json({ success: false, message: 'ID do meio de pagamento inválido' });
+      }
+
+      const meioAtualizado = await meioPagamentoService.atualizarStatus(id, String(status));
 
       return res.status(200).json({
         success: true,

@@ -1,9 +1,4 @@
-export interface CriarCampanhaOpcaoInputDTO {
-  campanha_id: string;
-  descricao: string;
-}
-
 export interface DefinirResultadoInputDTO {
-  campanha_id: string;
-  opcao_id: string;
+  campanha_id: number;
+  opcao_id: number;
 }

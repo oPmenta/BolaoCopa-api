@@ -63,10 +63,12 @@ export class CampanhaController {
 
     async atualizarStatus(req: Request, res: Response): Promise<Response> {
         try {
-            const { idCampanha } = req.params;
+            const idCampanha = Number(req.params.idCampanha);
             const { status } = req.body;
 
-            const campanha = await campanhaService.atualizarStatus(String(idCampanha), String(status));
+            if (isNaN(idCampanha)) throw new Error('ID inválido');
+
+            const campanha = await campanhaService.atualizarStatus(idCampanha, String(status));
 
             return res.status(200).json({
                 success: true,

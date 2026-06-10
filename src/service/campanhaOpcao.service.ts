@@ -1,43 +1,7 @@
 import { prisma } from '../database/prismaClient';
-import { CriarCampanhaOpcaoInputDTO, DefinirResultadoInputDTO } from '../dtos/campanhaOpcao.dto';
+import { DefinirResultadoInputDTO } from '../dtos/campanhaOpcao.dto';
 
 export class CampanhaOpcaoService {
-  async criar({ campanha_id, descricao }: CriarCampanhaOpcaoInputDTO) {
-    if (!campanha_id || !descricao || descricao.trim() === '') {
-      throw new Error('Campanha ID e descrição são obrigatórios.');
-    }
-
-    const campanhaExiste = await prisma.campanha.findUnique({
-      where: { id: campanha_id },
-    });
-
-    if (!campanhaExiste) {
-      throw new Error('A campanha informada não existe.');
-    }
-
-    const opcaoDuplicada = await prisma.campanha_opcao.findFirst({
-      where: {
-        campanha_id,
-        descricao: { equals: descricao.trim(), mode: 'insensitive' },
-      },
-    });
-
-    if (opcaoDuplicada) {
-      throw new Error('Esta opção já está cadastrada para esta campanha.');
-    }
-
-    const novaOpcao = await prisma.campanha_opcao.create({
-      data: {
-        campanha_id,
-        descricao: descricao.trim(),
-        status: 'ATIVO',
-        eh_resultado_final: false,
-      },
-    });
-
-    return novaOpcao;
-  }
-
   async definirVencedor({ campanha_id, opcao_id }: DefinirResultadoInputDTO) {
     const campanha = await prisma.campanha.findUnique({
       where: { id: campanha_id },
@@ -74,7 +38,7 @@ export class CampanhaOpcaoService {
     });
   }
 
-  async listarPorCampanha(campanha_id: string) {
+  async listarPorCampanha(campanha_id: number) {
     return await prisma.campanha_opcao.findMany({
       where: { campanha_id },
     });

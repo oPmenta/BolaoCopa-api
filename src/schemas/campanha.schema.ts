@@ -7,15 +7,17 @@ export const CriarCampanhaSchema = z.object({
   taxa_operacional: z.number().min(0, 'Taxa operacional não pode ser negativa'),
   valor_bolao: z.number().min(0.01, 'Valor do bolão deve ser maior que 0'),
   codigo_campanha: z.string().min(3, 'Código deve ter no mínimo 3 caracteres'),
-  tipo_campanha_id: z.string().uuid('ID do tipo de campanha inválido'),
-  criador_id: z.string().uuid('ID do criador inválido'),
-  privacidade: z.boolean().optional().default(false)
+  tipo_campanha_id: z.coerce.number().int().positive('ID do tipo de campanha inválido'),
+  criador_id: z.coerce.number().int().positive('ID do criador inválido'),
+  privacidade: z.boolean().optional().default(false),
+  opcoes: z.array(z.string().min(2, 'Cada opção deve ter no mínimo 2 caracteres'))
+    .min(2, 'É necessário pelo menos 2 opções para a campanha'),
 });
 
 export const AtualizarStatusCampanhaSchema = z.object({
   status: z.string().refine(
-    (val) => ['ABERTA', 'ENCERRADA', 'CANCELADA'].includes(val),
-    { message: 'Status deve ser ABERTA, ENCERRADA ou CANCELADA' }
+    (val) => ['ABERTA', 'FECHADA', 'ENCERRADA'].includes(val),
+    { message: 'Status deve ser ABERTA, FECHADA ou ENCERRADA' }
   )
 });
 

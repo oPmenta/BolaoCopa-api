@@ -28,13 +28,13 @@ const usuarioController = new UsuarioController();
  *             properties:
  *               nome:
  *                 type: string
- *                 example: "Fulano de Tal"
+ *                 example: "Thiago"
  *               cpf:
  *                 type: string
  *                 example: "123.456.789-00"
  *               email:
  *                 type: string
- *                 example: "fulano@email.com"
+ *                 example: "thiago@gmail.com"
  *               telefone:
  *                 type: string
  *                 example: "(34) 99999-9999"
@@ -45,7 +45,7 @@ const usuarioController = new UsuarioController();
  *                 example: "USER"
  *               senha:
  *                 type: string
- *                 example: "senhaSegura123"
+ *                 example: "admin"
  *               status:
  *                 type: string
  *                 default: "ATIVO"
@@ -79,10 +79,10 @@ usuarioRoutes.post('/usuarios', validateRequest(CriarUsuarioSchema), usuarioCont
  *             properties:
  *               email:
  *                 type: string
- *                 example: "fulano@email.com"
+ *                 example: "thiago@gmail.com"
  *               senha:
  *                 type: string
- *                 example: "senhaSegura123"
+ *                 example: "admin"
  *     responses:
  *       200:
  *         description: "Login realizado com sucesso. Retorna token JWT."

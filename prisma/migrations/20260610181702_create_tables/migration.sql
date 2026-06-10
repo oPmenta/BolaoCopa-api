@@ -3,7 +3,7 @@ CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');
 
 -- CreateTable
 CREATE TABLE "usuario" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "nome" TEXT NOT NULL,
     "cpf" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE "usuario" (
 
 -- CreateTable
 CREATE TABLE "tipo_campanha" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "descricao" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ATIVO',
 
@@ -27,7 +27,7 @@ CREATE TABLE "tipo_campanha" (
 
 -- CreateTable
 CREATE TABLE "campanha" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "nome" TEXT NOT NULL,
     "dt_inicio" TIMESTAMP(3) NOT NULL,
     "dt_fim" TIMESTAMP(3) NOT NULL,
@@ -37,16 +37,16 @@ CREATE TABLE "campanha" (
     "status" TEXT NOT NULL DEFAULT 'ABERTA',
     "privacidade" BOOLEAN NOT NULL DEFAULT false,
     "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "criador_id" TEXT NOT NULL,
-    "tipo_campanha_id" TEXT NOT NULL,
+    "criador_id" INTEGER NOT NULL,
+    "tipo_campanha_id" INTEGER NOT NULL,
 
     CONSTRAINT "campanha_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "campanha_opcao" (
-    "id" TEXT NOT NULL,
-    "campanha_id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "campanha_id" INTEGER NOT NULL,
     "descricao" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ATIVO',
     "eh_resultado_final" BOOLEAN NOT NULL DEFAULT false,
@@ -56,7 +56,7 @@ CREATE TABLE "campanha_opcao" (
 
 -- CreateTable
 CREATE TABLE "meio_pagamento" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "descricao" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ATIVO',
 
@@ -65,10 +65,10 @@ CREATE TABLE "meio_pagamento" (
 
 -- CreateTable
 CREATE TABLE "aposta" (
-    "id" TEXT NOT NULL,
-    "usuario_id" TEXT NOT NULL,
-    "campanha_opcao_id" TEXT NOT NULL,
-    "meio_pagamento_id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "usuario_id" INTEGER NOT NULL,
+    "campanha_opcao_id" INTEGER NOT NULL,
+    "meio_pagamento_id" INTEGER NOT NULL,
     "dt_criacao" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" TEXT NOT NULL DEFAULT 'PENDENTE',
     "comprovante" TEXT,

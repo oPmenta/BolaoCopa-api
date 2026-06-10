@@ -41,10 +41,14 @@ export class TipoCampanhaController {
 
   async atualizarStatus(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const id = Number(req.params.id);
       const { status } = req.body;
 
-      const tipoAtualizado = await tipoCampanhaService.atualizarStatus(String(id), String(status));
+      if (isNaN(id)) {
+        return res.status(400).json({ success: false, message: 'ID do tipo de campanha inválido' });
+      }
+
+      const tipoAtualizado = await tipoCampanhaService.atualizarStatus(id, String(status));
 
       return res.status(200).json({
         success: true,

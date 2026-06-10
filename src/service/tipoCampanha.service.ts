@@ -20,7 +20,7 @@ export class TipoCampanhaService {
     return await prisma.tipo_campanha.findMany();
   }
 
-  async atualizarStatus(id: string, novoStatus: string) {
+  async atualizarStatus(id: number, novoStatus: string) {
     if (!id || !novoStatus) {
       throw new Error('ID e status são obrigatórios.');
     }

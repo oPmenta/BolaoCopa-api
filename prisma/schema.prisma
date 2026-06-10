@@ -7,12 +7,12 @@ generator client {
 }
 
 model usuario {
-  id           String   @id @default(uuid())
+  id           Int      @id @default(autoincrement())
   nome         String
   cpf          String   @unique
   email        String   @unique
   telefone     String
-  tipo_usuario Role      @default(USER)
+  tipo_usuario Role     @default(USER)
   senha        String
   status       String   @default("ATIVO")
   criadoEm     DateTime @default(now())
@@ -21,61 +21,59 @@ model usuario {
 }
 
 model tipo_campanha {
-  id        String     @id @default(uuid())
+  id        Int        @id @default(autoincrement())
   descricao String
   status    String     @default("ATIVO")
   campanhas campanha[]
 }
 
 model campanha {
-  id               String          @id @default(uuid())
+  id               Int              @id @default(autoincrement())
   nome             String
   dt_inicio        DateTime
   dt_fim           DateTime
   taxa_operacional Float
   valor_bolao      Float
-  codigo_campanha  String          @unique
-  status           String          @default("ABERTA")
-  privacidade      Boolean         @default(false)
-  criadoEm         DateTime        @default(now())
-  criador_id       String
-  criador          usuario         @relation(fields: [criador_id], references: [id])
-  tipo_campanha_id String
-  tipo_campanha    tipo_campanha   @relation(fields: [tipo_campanha_id], references: [id])
+  codigo_campanha  String           @unique
+  status           String           @default("ABERTA")
+  privacidade      Boolean          @default(false)
+  criadoEm         DateTime         @default(now())
+  criador_id       Int
+  criador          usuario          @relation(fields: [criador_id], references: [id])
+  tipo_campanha_id Int
+  tipo_campanha    tipo_campanha    @relation(fields: [tipo_campanha_id], references: [id])
   opcoes           campanha_opcao[]
 }
 
 model campanha_opcao {
-  id                 String   @id @default(uuid())
-  campanha_id        String
+  id                 Int      @id @default(autoincrement())
+  campanha_id        Int
   campanha           campanha @relation(fields: [campanha_id], references: [id])
   descricao          String
   status             String   @default("ATIVO")
   eh_resultado_final Boolean  @default(false)
-
   apostas            aposta[]
 
   @@unique([campanha_id, descricao])
 }
 
 model meio_pagamento {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   descricao String
   status    String   @default("ATIVO")
   apostas   aposta[]
 }
 
 model aposta {
-  id                String         @id @default(uuid())
-  usuario_id        String
-  usuario           usuario        @relation(fields: [usuario_id], references: [id])
-  campanha_opcao_id String
-  campanha_opcao    campanha_opcao @relation(fields: [campanha_opcao_id], references: [id])
-  meio_pagamento_id String
-  meio_pagamento    meio_pagamento @relation(fields: [meio_pagamento_id], references: [id])
-  
-  dt_criacao        DateTime       @default(now())
-  status            String         @default("PENDENTE")
+  id                Int              @id @default(autoincrement())
+  usuario_id        Int
+  usuario           usuario          @relation(fields: [usuario_id], references: [id])
+  campanha_opcao_id Int
+  campanha_opcao    campanha_opcao   @relation(fields: [campanha_opcao_id], references: [id])
+  meio_pagamento_id Int
+  meio_pagamento    meio_pagamento   @relation(fields: [meio_pagamento_id], references: [id])
+  dt_criacao        DateTime         @default(now())
+  status            String           @default("PENDENTE")
   comprovante       String?
 }
 

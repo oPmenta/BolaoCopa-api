@@ -25,14 +25,14 @@ const apostaController = new ApostaController();
  *               - meio_pagamento_id
  *             properties:
  *               usuario_id:
- *                 type: string
- *                 example: "id-do-usuario"
+ *                 type: number
+ *                 example: 1
  *               campanha_opcao_id:
- *                 type: string
- *                 example: "id-da-opcao-escolhida"
+ *                 type: number
+ *                 example: 1
  *               meio_pagamento_id:
- *                 type: string
- *                 example: "id-do-meio-de-pagamento"
+ *                 type: number
+ *                 example: 1
  *     responses:
  *       201:
  *         description: Aposta registrada com sucesso (Status PENDENTE).

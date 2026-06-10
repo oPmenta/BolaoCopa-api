@@ -10,7 +10,7 @@ const campanhaController = new CampanhaController();
  * @swagger
  * /campanhas:
  *   post:
- *     summary: "Cria uma nova campanha/bolão (público ou privado)"
+ *     summary: "Cria uma nova campanha/bolão com suas opções de aposta"
  *     tags:
  *       - Campanhas
  *     requestBody:
@@ -28,10 +28,11 @@ const campanhaController = new CampanhaController();
  *               - codigo_campanha
  *               - tipo_campanha_id
  *               - criador_id
+ *               - opcoes
  *             properties:
  *               nome:
  *                 type: string
- *                 example: "Bolão da Firma - Champions League"
+ *                 example: "Bolão da Copa do Mundo 2026"
  *               dt_inicio:
  *                 type: string
  *                 format: date-time
@@ -50,20 +51,26 @@ const campanhaController = new CampanhaController();
  *                 type: string
  *                 example: "CHAMPIONS-FIRMA"
  *               tipo_campanha_id:
- *                 type: string
- *                 example: "id-do-tipo-de-campanha"
+ *                 type: number
+ *                 example: 1
  *               criador_id:
- *                 type: string
- *                 example: "id-do-usuario-que-esta-criando"
+ *                 type: number
+ *                 example: 1
  *               privacidade:
  *                 type: boolean
  *                 default: false
  *                 example: false
+ *               opcoes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 minItems: 2
+ *                 example: ["Vitória do Brasil", "Vitória da Argentina", "Empate"]
  *     responses:
  *       201:
- *         description: "Campanha criada com sucesso."
+ *         description: "Campanha e opções criadas com sucesso."
  *       400:
- *         description: "Erros de validação (ex: datas incorretas, código duplicado)."
+ *         description: "Erros de validação (ex: datas incorretas, código duplicado, menos de 2 opções)."
  */
 campanhaRoutes.post('/campanhas', validateRequest(CriarCampanhaSchema), campanhaController.criar);
 
@@ -86,7 +93,7 @@ campanhaRoutes.get('/campanhas', campanhaController.listarTodas);
  * @swagger
  * /campanhas/publicas:
  *   get:
- *     summary: "Lista apenas as campanhas públicas e abertas (Para a Home do site)"
+ *     summary: "Lista apenas as campanhas públicas e abertas"
  *     tags:
  *       - Campanhas
  *     responses:
@@ -101,7 +108,7 @@ campanhaRoutes.get('/campanhas/publicas', campanhaController.listarPublicas);
  * @swagger
  * /campanhas/codigo/{codigo}:
  *   get:
- *     summary: "Busca uma campanha/sala privada diretamente pelo código de convite"
+ *     summary: "Busca uma campanha privada pelo código de convite"
  *     tags:
  *       - Campanhas
  *     parameters:
