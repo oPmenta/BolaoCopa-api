@@ -150,7 +150,7 @@ export class CampanhaService {
         if (!usuario) throw new Error('Usuário não encontrado.');
 
         if (campanha.criador_id !== usuarioId) {
-            throw new Error('Apenas o criador da campanha ou um administrador pode alterar o status.');
+            throw new Error('Apenas o criador da campanha pode alterar o status.');
         }
 
         const statusPermitidos = ['ABERTA', 'FECHADA', 'ENCERRADA'];
