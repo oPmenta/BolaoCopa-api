@@ -142,27 +142,26 @@ export class CampanhaService {
         return campanha;
     }
 
-    async atualizarStatus(id: number, novoStatus: string) {
+    async atualizarStatus(id: number, novoStatus: string, usuarioId: number) {
+        const campanha = await prisma.campanha.findUnique({ where: { id } });
+        if (!campanha) throw new Error('Campanha não encontrada.');
+
+        const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+        if (!usuario) throw new Error('Usuário não encontrado.');
+
+        if (campanha.criador_id !== usuarioId) {
+            throw new Error('Apenas o criador da campanha ou um administrador pode alterar o status.');
+        }
+
         const statusPermitidos = ['ABERTA', 'FECHADA', 'ENCERRADA'];
         const statusFormatado = novoStatus.toUpperCase().trim();
-
         if (!statusPermitidos.includes(statusFormatado)) {
-            throw new Error('Status inválido. Escolha entre ABERTA, FECHADA ou ENCERRADA.');
+            throw new Error('Status inválido.');
         }
 
-        const campanhaExiste = await prisma.campanha.findUnique({
+        return await prisma.campanha.update({
             where: { id },
+            data: { status: statusFormatado }
         });
-
-        if (!campanhaExiste) {
-            throw new Error('Campanha não encontrada.');
-        }
-
-        const campanhaAtualizada = await prisma.campanha.update({
-            where: { id },
-            data: { status: statusFormatado },
-        });
-
-        return campanhaAtualizada;
     }
 }
