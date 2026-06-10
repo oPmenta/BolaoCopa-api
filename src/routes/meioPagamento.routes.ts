@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { MeioPagamentoController } from '../controller/meioPagamento.controller';
+import { validateRequest } from '../middlewares/validateSchema';
+import { CriarMeioPagamentoSchema, AtualizarStatusMeioPagamentoSchema } from '../schemas/meioPagamento.schema';
 
 const meioPagamentoRoutes = Router();
 const meioPagamentoController = new MeioPagamentoController();
@@ -29,7 +31,7 @@ const meioPagamentoController = new MeioPagamentoController();
  *       400:
  *         description: Erro de validação ou duplicidade.
  */
-meioPagamentoRoutes.post('/meios-pagamento', meioPagamentoController.criar);
+meioPagamentoRoutes.post('/meios-pagamento', validateRequest(CriarMeioPagamentoSchema), meioPagamentoController.criar);
 
 /** 
  * @swagger
@@ -77,6 +79,6 @@ meioPagamentoRoutes.get('/meios-pagamento', meioPagamentoController.listar);
  *       400:
  *         description: Erro ao atualizar o status.
  */
-meioPagamentoRoutes.patch('/meios-pagamento/:id', meioPagamentoController.atualizarStatus);
+meioPagamentoRoutes.patch('/meios-pagamento/:id', validateRequest(AtualizarStatusMeioPagamentoSchema), meioPagamentoController.atualizarStatus);
 
 export { meioPagamentoRoutes };

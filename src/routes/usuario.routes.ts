@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { UsuarioController } from '../controller/usuario.controller';
+import { validateRequest } from '../middlewares/validateSchema';
+import { CriarUsuarioSchema, LoginSchema } from '../schemas/usuario.schema';
 
 const usuarioRoutes = Router();
 const usuarioController = new UsuarioController();
@@ -56,6 +58,39 @@ const usuarioController = new UsuarioController();
  *       500:
  *         description: "Erro interno do servidor"
  */
-usuarioRoutes.post('/usuarios', usuarioController.criar);
+usuarioRoutes.post('/usuarios', validateRequest(CriarUsuarioSchema), usuarioController.criar);
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: "Realiza o login de um usuário e retorna um token JWT"
+ *     tags: 
+ *       - Autenticação  
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - senha
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "fulano@email.com"
+ *               senha:
+ *                 type: string
+ *                 example: "senhaSegura123"
+ *     responses:
+ *       200:
+ *         description: "Login realizado com sucesso. Retorna token JWT."
+ *       401:
+ *         description: "E-mail ou senha inválidos"
+ *       400:
+ *         description: "E-mail e senha são obrigatórios"
+ */
+usuarioRoutes.post('/login', validateRequest(LoginSchema), usuarioController.login);
 
 export { usuarioRoutes };

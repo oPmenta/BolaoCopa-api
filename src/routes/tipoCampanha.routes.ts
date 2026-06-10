@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { TipoCampanhaController } from '../controller/tipoCampanha.controller';
+import { validateRequest } from '../middlewares/validateSchema';
+import { CriarTipoCampanhaSchema, AtualizarStatusTipoCampanhaSchema } from '../schemas/tipoCampanha.schema';
 
 const tipoCampanhaRoutes = Router();
 const tipoCampanhaController = new TipoCampanhaController();
@@ -31,7 +33,7 @@ const tipoCampanhaController = new TipoCampanhaController();
  *       500:
  *         description: Erro interno do servidor
  */
-tipoCampanhaRoutes.post('/tipos-campanha', tipoCampanhaController.criar);
+tipoCampanhaRoutes.post('/tipos-campanha', validateRequest(CriarTipoCampanhaSchema), tipoCampanhaController.criar);
 
 /**
  * @swagger
@@ -80,6 +82,6 @@ tipoCampanhaRoutes.get('/tipos-campanha', tipoCampanhaController.listar);
  *       400:
  *         description: Erro ao atualizar o status.
  */
-tipoCampanhaRoutes.patch('/tipos-campanha/:id', tipoCampanhaController.atualizarStatus);
+tipoCampanhaRoutes.patch('/tipos-campanha/:id', validateRequest(AtualizarStatusTipoCampanhaSchema), tipoCampanhaController.atualizarStatus);
 
 export { tipoCampanhaRoutes };

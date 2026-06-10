@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { CampanhaOpcaoController } from '../controller/campanhaOpcao.controller';
+import { validateRequest } from '../middlewares/validateSchema';
+import { CriarCampanhaOpcaoSchema, DefinirResultadoSchema } from '../schemas/campanhaOpcao.schema';
 
 const opcaoRoutes = Router();
 const opcaoController = new CampanhaOpcaoController();
@@ -33,7 +35,7 @@ const opcaoController = new CampanhaOpcaoController();
  *       400:
  *         description: Erro de validação ou duplicidade.
  */
-opcaoRoutes.post('/campanhas/opcoes', opcaoController.criar);
+opcaoRoutes.post('/campanhas/opcoes', validateRequest(CriarCampanhaOpcaoSchema), opcaoController.criar);
 
 /**
  * @swagger
@@ -85,6 +87,6 @@ opcaoRoutes.get('/campanhas/:idCampanha/opcoes', opcaoController.listar);
  *       400:
  *         description: Erro nas regras de negócio.
  */
-opcaoRoutes.patch('/campanhas/:idCampanha/definir-resultado', opcaoController.definirResultado);
+opcaoRoutes.patch('/campanhas/:idCampanha/definir-resultado', validateRequest(DefinirResultadoSchema), opcaoController.definirResultado);
 
 export { opcaoRoutes };

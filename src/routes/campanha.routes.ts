@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { CampanhaController } from '../controller/campanha.controller';
+import { validateRequest } from '../middlewares/validateSchema';
+import { CriarCampanhaSchema, AtualizarStatusCampanhaSchema } from '../schemas/campanha.schema';
 
 const campanhaRoutes = Router();
 const campanhaController = new CampanhaController();
@@ -63,7 +65,7 @@ const campanhaController = new CampanhaController();
  *       400:
  *         description: "Erros de validação (ex: datas incorretas, código duplicado)."
  */
-campanhaRoutes.post('/campanhas', campanhaController.criar);
+campanhaRoutes.post('/campanhas', validateRequest(CriarCampanhaSchema), campanhaController.criar);
 
 /**
  * @swagger
@@ -148,6 +150,6 @@ campanhaRoutes.get('/campanhas/codigo/:codigo', campanhaController.buscarPorCodi
  *       400:
  *         description: "Erro de validação ou ID não encontrado."
  */
-campanhaRoutes.patch('/campanhas/:idCampanha/status', campanhaController.atualizarStatus);
+campanhaRoutes.patch('/campanhas/:idCampanha/status', validateRequest(AtualizarStatusCampanhaSchema), campanhaController.atualizarStatus);
 
 export { campanhaRoutes };

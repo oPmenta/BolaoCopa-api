@@ -31,4 +31,24 @@ export class UsuarioController {
       });
     }
   }
+
+  async login(req: Request, res: Response): Promise<Response> {
+    try {
+      const { email, senha } = req.body;
+
+      const resultado = await usuarioService.login(email, senha);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Login realizado com sucesso!',
+        data: resultado
+      });
+    } catch (error: any) {
+      const statusCode = error.statusCode || 400;
+      return res.status(statusCode).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 }

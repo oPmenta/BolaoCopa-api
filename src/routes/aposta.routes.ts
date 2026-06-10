@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { ApostaController } from '../controller/aposta.controller';
+import { validateRequest } from '../middlewares/validateSchema';
+import { CriarApostaSchema } from '../schemas/aposta.schema';
 
 const apostaRoutes = Router();
 const apostaController = new ApostaController();
@@ -37,7 +39,7 @@ const apostaController = new ApostaController();
  *       400:
  *         description: Erro de validação ou campanha fechada/encerrada.
  */
-apostaRoutes.post('/apostas', apostaController.criar);
+apostaRoutes.post('/apostas', validateRequest(CriarApostaSchema), apostaController.criar);
 
 /**
  * @swagger

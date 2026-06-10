@@ -2,6 +2,9 @@ import { prisma } from '../database/prismaClient';
 import { CriarUsuarioInputDTO } from '../dtos/usuario.dto';
 import { AppError } from '../utils/AppError';
 import { Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { jwtConfig } from '../config/jwt.config';
 
 export class UsuarioService {
   async criar(dados: CriarUsuarioInputDTO) {
@@ -17,11 +20,54 @@ export class UsuarioService {
       ? (dados.tipo_usuario.toUpperCase().trim() as Role) 
       : Role.USER;
 
+    const senhaHash = await bcrypt.hash(dados.senha, 10);
+
     return await prisma.usuario.create({ 
       data: {
         ...dados,
-        tipo_usuario: tipoUsuarioFormatado
+        tipo_usuario: tipoUsuarioFormatado,
+        senha: senhaHash
       } 
     });
+  }
+
+  async login(email: string, senha: string) {
+    if (!email || !senha) {
+      throw new AppError('E-mail e senha são obrigatórios.', 400);
+    }
+
+    const usuario = await prisma.usuario.findUnique({
+      where: { email }
+    });
+
+    if (!usuario) {
+      throw new AppError('E-mail ou senha inválidos.', 401);
+    }
+
+    const senhaValida = await bcrypt.compare(senha, usuario.senha);
+
+    if (!senhaValida) {
+      throw new AppError('E-mail ou senha inválidos.', 401);
+    }
+
+    if (usuario.status !== 'ATIVO') {
+      throw new AppError('Usuário inativo.', 403);
+    }
+
+    const token = jwt.sign(
+      { usuarioId: usuario.id },
+      jwtConfig.secret,
+      { expiresIn: jwtConfig.expiresIn } as any
+    );
+
+    return {
+      token,
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        tipo_usuario: usuario.tipo_usuario
+      }
+    };
   }
 }
