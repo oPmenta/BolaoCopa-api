@@ -3,6 +3,7 @@ import { MeioPagamentoController } from '../controller/meioPagamento.controller'
 import { validateRequest } from '../middlewares/validateSchema';
 import { CriarMeioPagamentoSchema, AtualizarStatusMeioPagamentoSchema } from '../schemas/meioPagamento.schema';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { isAdmin } from '../middlewares/isAdmin';
 
 const meioPagamentoRoutes = Router();
 const meioPagamentoController = new MeioPagamentoController();
@@ -34,7 +35,7 @@ const meioPagamentoController = new MeioPagamentoController();
  *       400:
  *         description: Erro de validação ou duplicidade.
  */
-meioPagamentoRoutes.post('/meios-pagamento', authMiddleware, validateRequest(CriarMeioPagamentoSchema), meioPagamentoController.criar);
+meioPagamentoRoutes.post('/meios-pagamento', authMiddleware, isAdmin, validateRequest(CriarMeioPagamentoSchema), meioPagamentoController.criar);
 
 /** 
  * @swagger
@@ -86,6 +87,6 @@ meioPagamentoRoutes.get('/meios-pagamento', authMiddleware, meioPagamentoControl
  *       400:
  *         description: Erro ao atualizar o status.
  */
-meioPagamentoRoutes.patch('/meios-pagamento/:id', authMiddleware, validateRequest(AtualizarStatusMeioPagamentoSchema), meioPagamentoController.atualizarStatus);
+meioPagamentoRoutes.patch('/meios-pagamento/:id', authMiddleware, isAdmin, validateRequest(AtualizarStatusMeioPagamentoSchema), meioPagamentoController.atualizarStatus);
 
 export { meioPagamentoRoutes };

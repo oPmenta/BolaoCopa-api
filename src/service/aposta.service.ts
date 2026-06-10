@@ -2,7 +2,7 @@ import { prisma } from '../database/prismaClient';
 import { CriarApostaInputDTO } from '../dtos/aposta.dto';
 
 export class ApostaService {
-    async criar({ usuario_id, campanha_opcao_id, meio_pagamento_id }: CriarApostaInputDTO) {
+    async criar({ usuario_id, campanha_opcao_id, meio_pagamento_id, comprovante }: CriarApostaInputDTO) {
         if (!usuario_id || !campanha_opcao_id || !meio_pagamento_id) {
             throw new Error('Usuário, Opção da Campanha e Meio de Pagamento são obrigatórios.');
         }
@@ -40,7 +40,8 @@ export class ApostaService {
                 usuario_id,
                 campanha_opcao_id,
                 meio_pagamento_id,
-                status: 'PENDENTE',
+                status: comprovante ? 'AGUARDANDO_VALIDACAO' : 'PENDENTE', // se já tem comprovante, aguarda validação
+                comprovante: comprovante || null,
             },
             include: {
                 campanha_opcao: true,
@@ -63,6 +64,43 @@ export class ApostaService {
                 meio_pagamento: true,
             },
             orderBy: { dt_criacao: 'desc' },
+        });
+    }
+
+    async anexarComprovante(id: number, comprovantePath: string) {
+        const aposta = await prisma.aposta.findUnique({ where: { id } });
+        if (!aposta) throw new Error('Aposta não encontrada.');
+
+        if (aposta.status !== 'PENDENTE') {
+            throw new Error('Não é possível anexar comprovante a uma aposta já processada.');
+        }
+
+        return await prisma.aposta.update({
+            where: { id },
+            data: {
+                comprovante: comprovantePath,
+                status: 'AGUARDANDO_VALIDACAO'
+            }
+        });
+    }
+
+    async atualizarStatus(id: number, novoStatus: string, adminId: number) {
+        const admin = await prisma.usuario.findUnique({ where: { id: adminId } });
+        if (!admin || admin.tipo_usuario !== 'ADMIN') {
+            throw new Error('Apenas administradores podem alterar o status da aposta.');
+        }
+
+        const aposta = await prisma.aposta.findUnique({ where: { id } });
+        if (!aposta) throw new Error('Aposta não encontrada.');
+
+        const statusPermitidos = ['CONFIRMADA', 'REJEITADA'];
+        if (!statusPermitidos.includes(novoStatus)) {
+            throw new Error('Status inválido. Use CONFIRMADA ou REJEITADA.');
+        }
+
+        return await prisma.aposta.update({
+            where: { id },
+            data: { status: novoStatus }
         });
     }
 }

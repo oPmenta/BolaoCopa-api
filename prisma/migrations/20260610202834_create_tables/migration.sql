@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "ApostaStatus" AS ENUM ('PENDENTE', 'AGUARDANDO_VALIDACAO', 'CONFIRMADA', 'REJEITADA');
+
+-- CreateEnum
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');
 
 -- CreateTable
@@ -70,7 +73,7 @@ CREATE TABLE "aposta" (
     "campanha_opcao_id" INTEGER NOT NULL,
     "meio_pagamento_id" INTEGER NOT NULL,
     "dt_criacao" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "status" TEXT NOT NULL DEFAULT 'PENDENTE',
+    "status" "ApostaStatus" NOT NULL DEFAULT 'PENDENTE',
     "comprovante" TEXT,
 
     CONSTRAINT "aposta_pkey" PRIMARY KEY ("id")

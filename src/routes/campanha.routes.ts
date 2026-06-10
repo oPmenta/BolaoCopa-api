@@ -3,6 +3,7 @@ import { CampanhaController } from '../controller/campanha.controller';
 import { validateRequest } from '../middlewares/validateSchema';
 import { CriarCampanhaSchema, AtualizarStatusCampanhaSchema } from '../schemas/campanha.schema';
 import { authMiddleware } from '../middlewares/authMiddleware'; 
+import { isAdmin } from '../middlewares/isAdmin';
 
 const campanhaRoutes = Router();
 const campanhaController = new CampanhaController();
@@ -52,7 +53,7 @@ const campanhaController = new CampanhaController();
  *                 example: 20.0
  *               codigo_campanha:
  *                 type: string
- *                 example: "CHAMPIONS-FIRMA"
+ *                 example: "BOLAO-COPA"
  *               tipo_campanha_id:
  *                 type: number
  *                 example: 1
@@ -92,7 +93,7 @@ campanhaRoutes.post('/campanhas', authMiddleware, validateRequest(CriarCampanhaS
  *       500:
  *         description: "Erro interno do servidor"
  */
-campanhaRoutes.get('/campanhas', authMiddleware, campanhaController.listarTodas);
+campanhaRoutes.get('/campanhas', authMiddleware, isAdmin, campanhaController.listarTodas);
 
 /**
  * @swagger

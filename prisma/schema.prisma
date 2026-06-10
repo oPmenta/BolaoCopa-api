@@ -73,8 +73,15 @@ model aposta {
   meio_pagamento_id Int
   meio_pagamento    meio_pagamento   @relation(fields: [meio_pagamento_id], references: [id])
   dt_criacao        DateTime         @default(now())
-  status            String           @default("PENDENTE")
+  status           ApostaStatus     @default(PENDENTE)  // ← enum
   comprovante       String?
+}
+
+enum ApostaStatus {
+  PENDENTE
+  AGUARDANDO_VALIDACAO
+  CONFIRMADA
+  REJEITADA
 }
 
 enum Role {

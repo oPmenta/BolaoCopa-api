@@ -11,10 +11,13 @@ import { campanhaRoutes } from './routes/campanha.routes';
 import { opcaoRoutes } from './routes/campanhaOpcao.routes';
 import { meioPagamentoRoutes } from './routes/meioPagamento.routes';
 import { apostaRoutes } from './routes/aposta.routes';
+import path from 'path/win32';
 
 const app = express();
 
 app.use(express.json());
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
