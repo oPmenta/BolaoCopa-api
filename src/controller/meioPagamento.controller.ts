@@ -21,4 +21,24 @@ export class MeioPagamentoController {
       return res.status(500).json({ success: false, message: 'Erro ao listar os meios de pagamento.' });
     }
   }
+
+  async atualizarStatus(req: Request, res: Response): Promise<Response> {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const meioAtualizado = await meioPagamentoService.atualizarStatus(String(id), String(status));
+
+      return res.status(200).json({
+        success: true,
+        message: `Status do meio de pagamento atualizado para ${status} com sucesso!`,
+        data: meioAtualizado,
+      });
+    } catch (error: any) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
 }

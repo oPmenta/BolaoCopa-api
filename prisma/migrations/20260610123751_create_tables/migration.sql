@@ -20,6 +20,7 @@ CREATE TABLE "usuario" (
 CREATE TABLE "tipo_campanha" (
     "id" TEXT NOT NULL,
     "descricao" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'ATIVO',
 
     CONSTRAINT "tipo_campanha_pkey" PRIMARY KEY ("id")
 );
@@ -57,6 +58,7 @@ CREATE TABLE "campanha_opcao" (
 CREATE TABLE "meio_pagamento" (
     "id" TEXT NOT NULL,
     "descricao" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'ATIVO',
 
     CONSTRAINT "meio_pagamento_pkey" PRIMARY KEY ("id")
 );

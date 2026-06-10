@@ -16,6 +16,7 @@ export class ApostaService {
             where: { id: meio_pagamento_id },
         });
         if (!meioExiste) throw new Error('Meio de pagamento não encontrado.');
+        if (meioExiste.status !== 'ATIVO') throw new Error('Meio de pagamento indisponível.');
 
         const opcaoExiste = await prisma.campanha_opcao.findUnique({
             where: { id: campanha_opcao_id },

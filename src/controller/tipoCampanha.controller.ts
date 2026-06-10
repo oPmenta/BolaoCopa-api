@@ -38,4 +38,24 @@ export class TipoCampanhaController {
       });
     }
   }
+
+  async atualizarStatus(req: Request, res: Response): Promise<Response> {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const tipoAtualizado = await tipoCampanhaService.atualizarStatus(String(id), String(status));
+
+      return res.status(200).json({
+        success: true,
+        message: `Status do tipo de campanha atualizado para ${status} com sucesso!`,
+        data: tipoAtualizado,
+      });
+    } catch (error: any) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
 }

@@ -48,4 +48,38 @@ tipoCampanhaRoutes.post('/tipos-campanha', tipoCampanhaController.criar);
  */
 tipoCampanhaRoutes.get('/tipos-campanha', tipoCampanhaController.listar);
 
+/**
+ * @swagger
+ * /tipos-campanha/{id}:
+ *   patch:
+ *     summary: Atualiza o status de um tipo de campanha
+ *     tags:
+ *       - Tipos de Campanha
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [ATIVO, INATIVO]
+ *                 example: "INATIVO"
+ *     responses:
+ *       200:
+ *         description: Status atualizado com sucesso.
+ *       400:
+ *         description: Erro ao atualizar o status.
+ */
+tipoCampanhaRoutes.patch('/tipos-campanha/:id', tipoCampanhaController.atualizarStatus);
+
 export { tipoCampanhaRoutes };

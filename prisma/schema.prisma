@@ -23,6 +23,7 @@ model usuario {
 model tipo_campanha {
   id        String     @id @default(uuid())
   descricao String
+  status    String     @default("ATIVO")
   campanhas campanha[]
 }
 
@@ -60,6 +61,7 @@ model campanha_opcao {
 model meio_pagamento {
   id        String   @id @default(uuid())
   descricao String
+  status    String   @default("ATIVO")
   apostas   aposta[]
 }
 

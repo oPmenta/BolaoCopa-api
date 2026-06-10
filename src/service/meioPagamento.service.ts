@@ -31,4 +31,23 @@ export class MeioPagamentoService {
     async listarTodos() {
         return await prisma.meio_pagamento.findMany();
     }
+
+    async atualizarStatus(id: string, novoStatus: string) {
+        if (!id || !novoStatus) {
+            throw new Error('ID e status são obrigatórios.');
+        }
+
+        const meioExiste = await prisma.meio_pagamento.findUnique({
+            where: { id },
+        });
+
+        if (!meioExiste) {
+            throw new Error('Meio de pagamento não encontrado.');
+        }
+
+        return await prisma.meio_pagamento.update({
+            where: { id },
+            data: { status: novoStatus.toUpperCase().trim() },
+        });
+    }
 }

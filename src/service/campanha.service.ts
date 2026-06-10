@@ -48,6 +48,10 @@ export class CampanhaService {
             throw new Error('O tipo de campanha informado não existe no sistema.');
         }
 
+        if (tipoExiste.status !== 'ATIVO') {
+            throw new Error('O tipo de campanha informado está indisponível.');
+        }
+
         const codigoExiste = await prisma.campanha.findUnique({
             where: { codigo_campanha: codigo_campanha.toUpperCase().trim() },
         });
