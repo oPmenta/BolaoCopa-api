@@ -85,17 +85,20 @@ export class ApostaService {
         });
     }
 
-    async atualizarStatus(id: number, novoStatus: ApostaStatus, adminId: number) {
-        const admin = await prisma.usuario.findUnique({ where: { id: adminId } });
-        if (!admin || admin.tipo_usuario !== 'ADMIN') {
-            throw new Error('Apenas administradores podem alterar o status da aposta.');
-        }
+    async atualizarStatus(id: number, novoStatus: ApostaStatus, usuarioId: number) {
 
         const aposta = await prisma.aposta.findUnique({ where: { id } });
         if (!aposta) throw new Error('Aposta não encontrada.');
 
+        const campanha = await prisma.campanha.findUnique({ where: { id } });
+        if (!campanha) throw new Error('Campanha não encontrada.');
+
+        if (campanha.criador_id !== usuarioId) {
+            throw new Error('Apenas o criador da campanha pode alterar o status.');
+        }
+
         const statusPermitidos = ['CONFIRMADA', 'REJEITADA'];
-        
+
         if (novoStatus !== ApostaStatus.CONFIRMADA && novoStatus !== ApostaStatus.REJEITADA) {
             throw new Error('Status inválido. Use CONFIRMADA ou REJEITADA.');
         }

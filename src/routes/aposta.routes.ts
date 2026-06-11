@@ -136,7 +136,7 @@ apostaRoutes.patch(
  * @swagger
  * /apostas/{idAposta}/status:
  *   patch:
- *     summary: "Atualiza o status de uma aposta (apenas ADMIN)"
+ *     summary: "Atualiza o status de uma aposta"
  *     tags:
  *       - Apostas
  *     security:
@@ -169,7 +169,6 @@ apostaRoutes.patch(
 apostaRoutes.patch(
     '/apostas/:idAposta/status',
     authMiddleware,
-    isAdmin,
     apostaController.atualizarStatus
 );
 
