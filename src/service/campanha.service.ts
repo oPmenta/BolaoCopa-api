@@ -65,7 +65,6 @@ export class CampanhaService {
             throw new Error('Este código de campanha já está em uso.');
         }
 
-        // Usando transação para criar campanha + opções
         const result = await prisma.$transaction(async (tx) => {
             const novaCampanha = await tx.campanha.create({
                 data: {
@@ -82,7 +81,6 @@ export class CampanhaService {
                 },
             });
 
-            // Criar todas as opções
             await tx.campanha_opcao.createMany({
                 data: opcoes.map(descricao => ({
                     campanha_id: novaCampanha.id,
@@ -92,7 +90,6 @@ export class CampanhaService {
                 })),
             });
 
-            // Retornar campanha com as opções incluídas
             return await tx.campanha.findUnique({
                 where: { id: novaCampanha.id },
                 include: { opcoes: true },

@@ -55,8 +55,8 @@ const apostaController = new ApostaController();
 apostaRoutes.post(
     '/apostas',
     authMiddleware,
-    upload.single('comprovante'),      // <-- ACEITA UM ARQUIVO COM O CAMPO "comprovante"
-    validateRequest(CriarApostaSchema), // valida apenas os campos JSON (não o arquivo)
+    upload.single('comprovante'),
+    validateRequest(CriarApostaSchema),
     apostaController.criar
 );
 
