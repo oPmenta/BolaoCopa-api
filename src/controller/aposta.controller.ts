@@ -53,12 +53,12 @@ export class ApostaController {
     try {
       const idAposta = Number(req.params.idAposta);
       const { status } = req.body;
-      const adminId = (req as any).usuarioId;
+      const Id = (req as any).usuarioId;
 
       if (isNaN(idAposta)) throw new Error('ID inválido');
       if (!status) throw new Error('Status é obrigatório');
 
-      const apostaAtualizada = await apostaService.atualizarStatus(idAposta, status, adminId);
+      const apostaAtualizada = await apostaService.atualizarStatus(idAposta, status, Id);
 
       return res.status(200).json({
         success: true,

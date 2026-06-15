@@ -1,5 +1,6 @@
 import { prisma } from '../database/prismaClient';
 import { CriarApostaInputDTO } from '../dtos/aposta.dto';
+import { ApostaStatus } from '@prisma/client';
 
 export class ApostaService {
     async criar({ usuario_id, campanha_opcao_id, meio_pagamento_id, comprovante }: CriarApostaInputDTO) {
@@ -40,7 +41,7 @@ export class ApostaService {
                 usuario_id,
                 campanha_opcao_id,
                 meio_pagamento_id,
-                status: comprovante ? 'AGUARDANDO_VALIDACAO' : 'PENDENTE', // se já tem comprovante, aguarda validação
+                status: comprovante ? ApostaStatus.AGUARDANDO_VALIDACAO : ApostaStatus.PENDENTE,
                 comprovante: comprovante || null,
             },
             include: {
@@ -79,25 +80,28 @@ export class ApostaService {
             where: { id },
             data: {
                 comprovante: comprovantePath,
-                status: 'AGUARDANDO_VALIDACAO'
+                status: ApostaStatus.AGUARDANDO_VALIDACAO
             }
         });
     }
 
-    async atualizarStatus(id: number, novoStatus: string, adminId: number) {
-        const admin = await prisma.usuario.findUnique({ where: { id: adminId } });
-        if (!admin || admin.tipo_usuario !== 'ADMIN') {
-            throw new Error('Apenas administradores podem alterar o status da aposta.');
-        }
+    async atualizarStatus(id: number, novoStatus: ApostaStatus, usuarioId: number) {
 
         const aposta = await prisma.aposta.findUnique({ where: { id } });
         if (!aposta) throw new Error('Aposta não encontrada.');
 
-        const statusPermitidos = ['CONFIRMADA', 'REJEITADA'];
-        if (!statusPermitidos.includes(novoStatus)) {
-            throw new Error('Status inválido. Use CONFIRMADA ou REJEITADA.');
+        const campanha = await prisma.campanha.findUnique({ where: { id } });
+        if (!campanha) throw new Error('Campanha não encontrada.');
+
+        if (campanha.criador_id !== usuarioId) {
+            throw new Error('Apenas o criador da campanha pode alterar o status.');
         }
 
+        const statusPermitidos = ['CONFIRMADA', 'REJEITADA'];
+
+        if (novoStatus !== ApostaStatus.CONFIRMADA && novoStatus !== ApostaStatus.REJEITADA) {
+            throw new Error('Status inválido. Use CONFIRMADA ou REJEITADA.');
+        }
         return await prisma.aposta.update({
             where: { id },
             data: { status: novoStatus }

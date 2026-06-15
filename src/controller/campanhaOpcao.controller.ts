@@ -7,19 +7,19 @@ export class CampanhaOpcaoController {
   async definirResultado(req: Request, res: Response): Promise<Response> {
     try {
       const idCampanha = Number(req.params.idCampanha);
-      const opcao_id = Number(req.params.opcao_id);
+      const { opcao_id } = req.body;
 
       if (isNaN(idCampanha)) {
         return res.status(400).json({ success: false, message: 'ID da campanha inválido' });
       }
 
-      if (isNaN(opcao_id)) {
+      if (!opcao_id || isNaN(Number(opcao_id))) {
         return res.status(400).json({ success: false, message: 'ID da opção inválido' });
       }
 
       const resultado = await opcaoService.definirVencedor({
         campanha_id: idCampanha,
-        opcao_id: opcao_id,
+        opcao_id: Number(opcao_id),
       });
 
       return res.status(200).json({

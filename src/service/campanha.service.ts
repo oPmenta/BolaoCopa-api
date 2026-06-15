@@ -65,7 +65,6 @@ export class CampanhaService {
             throw new Error('Este código de campanha já está em uso.');
         }
 
-        // Usando transação para criar campanha + opções
         const result = await prisma.$transaction(async (tx) => {
             const novaCampanha = await tx.campanha.create({
                 data: {
@@ -82,7 +81,6 @@ export class CampanhaService {
                 },
             });
 
-            // Criar todas as opções
             await tx.campanha_opcao.createMany({
                 data: opcoes.map(descricao => ({
                     campanha_id: novaCampanha.id,
@@ -92,7 +90,6 @@ export class CampanhaService {
                 })),
             });
 
-            // Retornar campanha com as opções incluídas
             return await tx.campanha.findUnique({
                 where: { id: novaCampanha.id },
                 include: { opcoes: true },
@@ -142,27 +139,26 @@ export class CampanhaService {
         return campanha;
     }
 
-    async atualizarStatus(id: number, novoStatus: string) {
+    async atualizarStatus(id: number, novoStatus: string, usuarioId: number) {
+        const campanha = await prisma.campanha.findUnique({ where: { id } });
+        if (!campanha) throw new Error('Campanha não encontrada.');
+
+        const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+        if (!usuario) throw new Error('Usuário não encontrado.');
+
+        if (campanha.criador_id !== usuarioId) {
+            throw new Error('Apenas o criador da campanha pode alterar o status.');
+        }
+
         const statusPermitidos = ['ABERTA', 'FECHADA', 'ENCERRADA'];
         const statusFormatado = novoStatus.toUpperCase().trim();
-
         if (!statusPermitidos.includes(statusFormatado)) {
-            throw new Error('Status inválido. Escolha entre ABERTA, FECHADA ou ENCERRADA.');
+            throw new Error('Status inválido.');
         }
 
-        const campanhaExiste = await prisma.campanha.findUnique({
+        return await prisma.campanha.update({
             where: { id },
+            data: { status: statusFormatado }
         });
-
-        if (!campanhaExiste) {
-            throw new Error('Campanha não encontrada.');
-        }
-
-        const campanhaAtualizada = await prisma.campanha.update({
-            where: { id },
-            data: { status: statusFormatado },
-        });
-
-        return campanhaAtualizada;
     }
 }

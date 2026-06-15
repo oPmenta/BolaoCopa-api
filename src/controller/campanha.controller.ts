@@ -65,10 +65,11 @@ export class CampanhaController {
         try {
             const idCampanha = Number(req.params.idCampanha);
             const { status } = req.body;
+            const usuarioId = (req as any).usuarioId;
 
             if (isNaN(idCampanha)) throw new Error('ID inválido');
 
-            const campanha = await campanhaService.atualizarStatus(idCampanha, String(status));
+            const campanha = await campanhaService.atualizarStatus(idCampanha, status, usuarioId);
 
             return res.status(200).json({
                 success: true,

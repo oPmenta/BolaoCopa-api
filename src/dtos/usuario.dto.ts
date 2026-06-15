@@ -8,7 +8,6 @@ export interface CriarUsuarioInputDTO {
   status?: string;
 }
 
-// AINDA NAO ESTA SENDO UTILIZADO, MAS PODE SER USADO PARA DEFINIR O FORMATO DE DADOS QUE SAEM DA API
 export interface UsuarioOutputDTO {
   id: number;
   nome: string;
