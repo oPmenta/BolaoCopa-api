@@ -8,7 +8,7 @@ const usuarioController = new UsuarioController();
 
 /**
  * @swagger
- * /usuarios:
+ * /cadastro:
  *   post:
  *     summary: "Cria um novo usuário"
  *     tags: 
@@ -58,7 +58,7 @@ const usuarioController = new UsuarioController();
  *       500:
  *         description: "Erro interno do servidor"
  */
-usuarioRoutes.post('/usuarios', validateRequest(CriarUsuarioSchema), usuarioController.criar);
+usuarioRoutes.post('/cadastro', validateRequest(CriarUsuarioSchema), usuarioController.criar);
 
 /**
  * @swagger

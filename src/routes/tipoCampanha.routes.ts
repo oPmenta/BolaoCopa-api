@@ -40,7 +40,7 @@ tipoCampanhaRoutes.post('/tipos-campanha', authMiddleware, validateRequest(Criar
 
 /**
  * @swagger
- * /tipos-campanha:
+ * /listar-tipos-campanha:
  *   get:
  *     summary: Lista todos os tipos de campanha cadastrados
  *     tags:
@@ -53,7 +53,7 @@ tipoCampanhaRoutes.post('/tipos-campanha', authMiddleware, validateRequest(Criar
  *       500:
  *         description: Erro interno do servidor
  */
-tipoCampanhaRoutes.get('/tipos-campanha', authMiddleware, tipoCampanhaController.listar);
+tipoCampanhaRoutes.get('/listar-tipos-campanha', authMiddleware, tipoCampanhaController.listar);
 
 /**
  * @swagger

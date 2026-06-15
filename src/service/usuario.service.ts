@@ -8,6 +8,7 @@ import { jwtConfig } from '../config/jwt.config';
 
 export class UsuarioService {
   async criar(dados: CriarUsuarioInputDTO) {
+    console.log('Dados recebidos no backend:', dados);
     const usuarioExistente = await prisma.usuario.findUnique({
       where: { email: dados.email }
     });
@@ -16,18 +17,23 @@ export class UsuarioService {
       throw new AppError('E-mail já cadastrado.', 400);
     }
 
-    const tipoUsuarioFormatado = dados.tipo_usuario 
-      ? (dados.tipo_usuario.toUpperCase().trim() as Role) 
+    const tipoUsuarioFormatado = dados.tipo_usuario
+      ? (dados.tipo_usuario.toUpperCase().trim() as Role)
       : Role.USER;
 
     const senhaHash = await bcrypt.hash(dados.senha, 10);
 
-    return await prisma.usuario.create({ 
+    // Criação explícita, sem espalhar o objeto inteiro
+    return await prisma.usuario.create({
       data: {
-        ...dados,
+        nome: dados.nome,
+        cpf: dados.cpf,
+        email: dados.email,
+        telefone: dados.telefone,
+        senha: senhaHash,
         tipo_usuario: tipoUsuarioFormatado,
-        senha: senhaHash
-      } 
+        status: dados.status || 'ATIVO'
+      }
     });
   }
 
@@ -55,10 +61,11 @@ export class UsuarioService {
     }
 
     const token = jwt.sign(
-      { usuarioId: usuario.id,
+      {
+        usuarioId: usuario.id,
         nome: usuario.nome,
         tipo_usuario: usuario.tipo_usuario,
-       },
+      },
       jwtConfig.secret,
       { expiresIn: jwtConfig.expiresIn } as any
     );
