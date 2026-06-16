@@ -36,7 +36,6 @@ model campanha {
   valor_bolao      Float
   codigo_campanha  String           @unique
   status           String           @default("ABERTA")
-  privacidade      Boolean          @default(false)
   criadoEm         DateTime         @default(now())
   criador_id       Int
   criador          usuario          @relation(fields: [criador_id], references: [id])

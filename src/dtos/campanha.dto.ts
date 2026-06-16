@@ -7,6 +7,5 @@ export interface CriarCampanhaInputDTO {
   codigo_campanha: string;
   tipo_campanha_id: number;
   criador_id: number;
-  privacidade?: boolean;
   opcoes: string[];
 }

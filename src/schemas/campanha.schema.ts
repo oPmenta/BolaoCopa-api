@@ -9,7 +9,6 @@ export const CriarCampanhaSchema = z.object({
   codigo_campanha: z.string().min(3, 'Código deve ter no mínimo 3 caracteres'),
   tipo_campanha_id: z.coerce.number().int().positive('ID do tipo de campanha inválido'),
   criador_id: z.coerce.number().int().positive('ID do criador inválido'),
-  privacidade: z.boolean().optional().default(false),
   opcoes: z.array(z.string().min(2, 'Cada opção deve ter no mínimo 2 caracteres'))
     .min(2, 'É necessário pelo menos 2 opções para a campanha'),
 });

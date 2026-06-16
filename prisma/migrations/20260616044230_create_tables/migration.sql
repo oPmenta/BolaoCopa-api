@@ -38,7 +38,6 @@ CREATE TABLE "campanha" (
     "valor_bolao" DOUBLE PRECISION NOT NULL,
     "codigo_campanha" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ABERTA',
-    "privacidade" BOOLEAN NOT NULL DEFAULT false,
     "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "criador_id" INTEGER NOT NULL,
     "tipo_campanha_id" INTEGER NOT NULL,

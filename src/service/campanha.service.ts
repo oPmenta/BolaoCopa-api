@@ -11,60 +11,53 @@ export class CampanhaService {
             taxa_operacional,
             valor_bolao,
             codigo_campanha,
-            tipo_campanha_id,
+            tipo_campanha_id, // agora usado para privacidade
             criador_id,
-            privacidade,
             opcoes
         } = data;
 
-        if (!nome || !dt_inicio || !dt_fim || !codigo_campanha || !tipo_campanha_id || !criador_id) {
-            throw new Error('Todos os campos obrigatórios da campanha devem ser preenchidos, incluindo o criador.');
-        }
-
+        // Validações básicas...
         if (!opcoes || opcoes.length < 2) {
             throw new Error('A campanha deve ter pelo menos 2 opções de aposta.');
         }
 
+        // Verificar criador
         const criadorExiste = await prisma.usuario.findUnique({
             where: { id: criador_id },
         });
+        if (!criadorExiste) throw new Error('Criador não encontrado.');
 
-        if (!criadorExiste) {
-            throw new Error('O usuário criador informado não existe no sistema.');
-        }
-
-        let privacidadeDefinida = privacidade ?? false;
+        // Se o criador for USER, força o tipo PRIVADA (pode buscar o id do tipo "PRIVADA")
+        // Para simplificar, vamos supor que o tipo "PRIVADA" tem id 2 (ou buscar dinamicamente)
+        let tipoFinal = tipo_campanha_id;
         if (criadorExiste.tipo_usuario === Role.USER) {
-            privacidadeDefinida = true;
+            // Buscar o tipo "PRIVADA"
+            const tipoPrivada = await prisma.tipo_campanha.findFirst({
+                where: { descricao: { equals: 'PRIVADA', mode: 'insensitive' } }
+            });
+            if (!tipoPrivada) throw new Error('Tipo de campanha PRIVADA não encontrado.');
+            tipoFinal = tipoPrivada.id;
         }
 
+        // Validar datas
         const dataInicio = new Date(dt_inicio);
         const dataFim = new Date(dt_fim);
+        if (dataFim < dataInicio) throw new Error('Data de fim não pode ser menor que início.');
 
-        if (dataFim < dataInicio) {
-            throw new Error('A data de fim (dt_fim) não pode ser menor que a data de início (dt_inicio).');
-        }
-
+        // Verificar se o tipo de campanha existe e está ativo
         const tipoExiste = await prisma.tipo_campanha.findUnique({
-            where: { id: tipo_campanha_id },
+            where: { id: tipoFinal },
         });
+        if (!tipoExiste) throw new Error('Tipo de campanha inválido.');
+        if (tipoExiste.status !== 'ATIVO') throw new Error('Tipo de campanha indisponível.');
 
-        if (!tipoExiste) {
-            throw new Error('O tipo de campanha informado não existe no sistema.');
-        }
-
-        if (tipoExiste.status !== 'ATIVO') {
-            throw new Error('O tipo de campanha informado está indisponível.');
-        }
-
+        // Verificar código único
         const codigoExiste = await prisma.campanha.findUnique({
             where: { codigo_campanha: codigo_campanha.toUpperCase().trim() },
         });
+        if (codigoExiste) throw new Error('Código de campanha já existe.');
 
-        if (codigoExiste) {
-            throw new Error('Este código de campanha já está em uso.');
-        }
-
+        // Criar transação
         const result = await prisma.$transaction(async (tx) => {
             const novaCampanha = await tx.campanha.create({
                 data: {
@@ -75,9 +68,8 @@ export class CampanhaService {
                     valor_bolao: Number(valor_bolao),
                     codigo_campanha: codigo_campanha.toUpperCase().trim(),
                     status: 'ABERTA',
-                    privacidade: privacidadeDefinida,
                     criador_id,
-                    tipo_campanha_id,
+                    tipo_campanha_id: tipoFinal,
                 },
             });
 
@@ -92,7 +84,7 @@ export class CampanhaService {
 
             return await tx.campanha.findUnique({
                 where: { id: novaCampanha.id },
-                include: { opcoes: true },
+                include: { opcoes: true, tipo_campanha: true },
             });
         });
 
@@ -101,41 +93,33 @@ export class CampanhaService {
 
     async listarTodas() {
         return await prisma.campanha.findMany({
-            include: {
-                tipo_campanha: true,
-            },
+            include: { tipo_campanha: true },
         });
     }
 
     async listarApenasPublicas() {
+        // Buscar o tipo "PÚBLICA"
+        const tipoPublica = await prisma.tipo_campanha.findFirst({
+            where: { descricao: { equals: 'PÚBLICA', mode: 'insensitive' } }
+        });
+        if (!tipoPublica) return []; // ou throw
+
         return await prisma.campanha.findMany({
             where: {
-                privacidade: false,
-                status: 'ABERTA'
+                tipo_campanha_id: tipoPublica.id,
+                status: 'ABERTA',
             },
-            include: {
-                tipo_campanha: true,
-            }
+            include: { tipo_campanha: true },
         });
     }
 
     async buscarPorCodigo(codigo: string) {
-        if (!codigo) {
-            throw new Error('O código de convite é obrigatório para realizar a busca.');
-        }
-
+        if (!codigo) throw new Error('Código obrigatório.');
         const campanha = await prisma.campanha.findUnique({
             where: { codigo_campanha: codigo.toUpperCase().trim() },
-            include: {
-                tipo_campanha: true,
-                opcoes: true,
-            }
+            include: { tipo_campanha: true, opcoes: true },
         });
-
-        if (!campanha) {
-            throw new Error('Nenhum bolão ou campanha foi localizado com este código de convite.');
-        }
-
+        if (!campanha) throw new Error('Campanha não encontrada.');
         return campanha;
     }
 
