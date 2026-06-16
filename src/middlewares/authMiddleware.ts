@@ -4,7 +4,7 @@ import { jwtConfig } from '../config/jwt.config';
 import { AppError } from '../utils/AppError';
 
 export interface AuthenticatedRequest extends Request {
-  usuarioId?: string;
+  usuarioId?: number;
 }
 
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -28,7 +28,7 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     }
 
     const decoded = jwt.verify(token, jwtConfig.secret) as { usuarioId: string };
-    req.usuarioId = decoded.usuarioId;
+    req.usuarioId = parseInt(decoded.usuarioId, 10);
 
     return next();
   } catch (error: any) {

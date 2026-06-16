@@ -3,7 +3,7 @@ import { CriarCampanhaInputDTO } from '../dtos/campanha.dto';
 import { Role } from '@prisma/client';
 
 export class CampanhaService {
-    async criar(data: CriarCampanhaInputDTO) {
+    async criar(data: CriarCampanhaInputDTO, usuarioId: number) {
         const {
             nome,
             dt_inicio,
@@ -11,53 +11,61 @@ export class CampanhaService {
             taxa_operacional,
             valor_bolao,
             codigo_campanha,
-            tipo_campanha_id, // agora usado para privacidade
-            criador_id,
+            tipo_campanha_id,
             opcoes
         } = data;
 
-        // Validações básicas...
         if (!opcoes || opcoes.length < 2) {
             throw new Error('A campanha deve ter pelo menos 2 opções de aposta.');
         }
 
-        // Verificar criador
-        const criadorExiste = await prisma.usuario.findUnique({
-            where: { id: criador_id },
-        });
-        if (!criadorExiste) throw new Error('Criador não encontrado.');
+        const opcoesUnicas = [...new Set(opcoes.map(o => o.trim().toUpperCase()))];
+        if (opcoesUnicas.length !== opcoes.length) {
+            throw new Error('Opções duplicadas não são permitidas.');
+        }
 
-        // Se o criador for USER, força o tipo PRIVADA (pode buscar o id do tipo "PRIVADA")
-        // Para simplificar, vamos supor que o tipo "PRIVADA" tem id 2 (ou buscar dinamicamente)
-        let tipoFinal = tipo_campanha_id;
-        if (criadorExiste.tipo_usuario === Role.USER) {
-            // Buscar o tipo "PRIVADA"
+        const criador = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+        if (!criador) throw new Error('Criador não encontrado.');
+
+        let tipoFinal: number;
+        if (criador.tipo_usuario === Role.USER) {
             const tipoPrivada = await prisma.tipo_campanha.findFirst({
                 where: { descricao: { equals: 'PRIVADA', mode: 'insensitive' } }
             });
-            if (!tipoPrivada) throw new Error('Tipo de campanha PRIVADA não encontrado.');
+            if (!tipoPrivada) throw new Error('Tipo PRIVADA não encontrado.');
             tipoFinal = tipoPrivada.id;
+        } else if (criador.tipo_usuario === Role.ADMIN) {
+            if (!tipo_campanha_id) {
+                throw new Error('Tipo de campanha é obrigatório para administradores.');
+            }
+            const tipo = await prisma.tipo_campanha.findUnique({
+                where: { id: tipo_campanha_id },
+            });
+            if (!tipo) throw new Error('Tipo de campanha inválido.');
+            if (tipo.status !== 'ATIVO') throw new Error('Tipo indisponível.');
+            tipoFinal = tipo.id;
+        } else {
+            throw new Error('Tipo de usuário inválido.');
         }
 
-        // Validar datas
         const dataInicio = new Date(dt_inicio);
         const dataFim = new Date(dt_fim);
-        if (dataFim < dataInicio) throw new Error('Data de fim não pode ser menor que início.');
+        const agora = new Date();
+        if (isNaN(dataInicio.getTime()) || isNaN(dataFim.getTime())) {
+            throw new Error('Datas inválidas.');
+        }
+        if (dataInicio <= agora) {
+            throw new Error('Data de início deve ser futura.');
+        }
+        if (dataFim <= dataInicio) {
+            throw new Error('Data de fim deve ser posterior ao início.');
+        }
 
-        // Verificar se o tipo de campanha existe e está ativo
-        const tipoExiste = await prisma.tipo_campanha.findUnique({
-            where: { id: tipoFinal },
-        });
-        if (!tipoExiste) throw new Error('Tipo de campanha inválido.');
-        if (tipoExiste.status !== 'ATIVO') throw new Error('Tipo de campanha indisponível.');
-
-        // Verificar código único
         const codigoExiste = await prisma.campanha.findUnique({
             where: { codigo_campanha: codigo_campanha.toUpperCase().trim() },
         });
         if (codigoExiste) throw new Error('Código de campanha já existe.');
 
-        // Criar transação
         const result = await prisma.$transaction(async (tx) => {
             const novaCampanha = await tx.campanha.create({
                 data: {
@@ -68,13 +76,13 @@ export class CampanhaService {
                     valor_bolao: Number(valor_bolao),
                     codigo_campanha: codigo_campanha.toUpperCase().trim(),
                     status: 'ABERTA',
-                    criador_id,
+                    criador_id: usuarioId,
                     tipo_campanha_id: tipoFinal,
                 },
             });
 
             await tx.campanha_opcao.createMany({
-                data: opcoes.map(descricao => ({
+                data: opcoesUnicas.map(descricao => ({
                     campanha_id: novaCampanha.id,
                     descricao: descricao.trim(),
                     status: 'ATIVO',
@@ -82,35 +90,51 @@ export class CampanhaService {
                 })),
             });
 
-            return await tx.campanha.findUnique({
+            const campanhaCriada = await tx.campanha.findUnique({
                 where: { id: novaCampanha.id },
                 include: { opcoes: true, tipo_campanha: true },
             });
+
+            if (!campanhaCriada) {
+                throw new Error('Erro ao recuperar a campanha criada.');
+            }
+
+            return {
+                ...campanhaCriada,
+                tipo: campanhaCriada.tipo_campanha.descricao,
+            };
         });
 
         return result;
     }
 
     async listarTodas() {
-        return await prisma.campanha.findMany({
+        const campanhas = await prisma.campanha.findMany({
             include: { tipo_campanha: true },
         });
+        return campanhas.map(c => ({
+            ...c,
+            tipo: c.tipo_campanha.descricao, // campo virtual
+        }));
     }
 
     async listarApenasPublicas() {
-        // Buscar o tipo "PÚBLICA"
         const tipoPublica = await prisma.tipo_campanha.findFirst({
             where: { descricao: { equals: 'PÚBLICA', mode: 'insensitive' } }
         });
-        if (!tipoPublica) return []; // ou throw
+        if (!tipoPublica) return [];
 
-        return await prisma.campanha.findMany({
+        const campanhas = await prisma.campanha.findMany({
             where: {
                 tipo_campanha_id: tipoPublica.id,
                 status: 'ABERTA',
             },
             include: { tipo_campanha: true },
         });
+        return campanhas.map(c => ({
+            ...c,
+            tipo: c.tipo_campanha.descricao,
+        }));
     }
 
     async buscarPorCodigo(codigo: string) {
@@ -120,7 +144,10 @@ export class CampanhaService {
             include: { tipo_campanha: true, opcoes: true },
         });
         if (!campanha) throw new Error('Campanha não encontrada.');
-        return campanha;
+        return {
+            ...campanha,
+            tipo: campanha.tipo_campanha.descricao,
+        };
     }
 
     async atualizarStatus(id: number, novoStatus: string, usuarioId: number) {

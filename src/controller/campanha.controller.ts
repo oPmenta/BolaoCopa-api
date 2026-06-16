@@ -6,7 +6,11 @@ const campanhaService = new CampanhaService();
 export class CampanhaController {
     async criar(req: Request, res: Response): Promise<Response> {
         try {
-            const novaCampanha = await campanhaService.criar(req.body);
+            const usuarioId = Number((req as any).usuarioId);
+            if (isNaN(usuarioId)) {
+                return res.status(401).json({ success: false, message: 'Usuário não autenticado' });
+            }
+            const novaCampanha = await campanhaService.criar(req.body, usuarioId);
 
             return res.status(201).json({
                 success: true,
@@ -65,9 +69,10 @@ export class CampanhaController {
         try {
             const idCampanha = Number(req.params.idCampanha);
             const { status } = req.body;
-            const usuarioId = (req as any).usuarioId;
+            const usuarioId = Number((req as any).usuarioId);
 
             if (isNaN(idCampanha)) throw new Error('ID inválido');
+            if (isNaN(usuarioId)) throw new Error('Usuário não autenticado');
 
             const campanha = await campanhaService.atualizarStatus(idCampanha, status, usuarioId);
 
