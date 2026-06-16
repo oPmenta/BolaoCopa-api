@@ -102,6 +102,7 @@ export class CampanhaService {
             return {
                 ...campanhaCriada,
                 tipo: campanhaCriada.tipo_campanha.descricao,
+                codigoConvite: campanhaCriada.codigo_campanha,
             };
         });
 
@@ -114,7 +115,8 @@ export class CampanhaService {
         });
         return campanhas.map(c => ({
             ...c,
-            tipo: c.tipo_campanha.descricao, // campo virtual
+            tipo: c.tipo_campanha.descricao,
+            codigoConvite: c.codigo_campanha,
         }));
     }
 
@@ -134,6 +136,7 @@ export class CampanhaService {
         return campanhas.map(c => ({
             ...c,
             tipo: c.tipo_campanha.descricao,
+            codigoConvite: c.codigo_campanha,
         }));
     }
 
@@ -147,6 +150,7 @@ export class CampanhaService {
         return {
             ...campanha,
             tipo: campanha.tipo_campanha.descricao,
+            codigoConvite: campanha.codigo_campanha,
         };
     }
 
