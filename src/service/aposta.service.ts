@@ -1,5 +1,6 @@
 import { prisma } from '../database/prismaClient';
 import { CriarApostaInputDTO } from '../dtos/aposta.dto';
+import { DefinirResultadoInputDTO } from '../dtos/campanhaOpcao.dto';
 import { ApostaStatus } from '@prisma/client';
 
 export class ApostaService {
@@ -162,22 +163,30 @@ export class ApostaService {
     }
 
     async atualizarStatus(id: number, novoStatus: ApostaStatus, usuarioId: number) {
-
-        const aposta = await prisma.aposta.findUnique({ where: { id } });
+        // Busca a aposta com o relacionamento para a campanha
+        const aposta = await prisma.aposta.findUnique({
+            where: { id },
+            include: {
+                campanha_opcao: {
+                    include: { campanha: true }
+                }
+            }
+        });
         if (!aposta) throw new Error('Aposta não encontrada.');
+        if (!aposta.campanha_opcao || !aposta.campanha_opcao.campanha) {
+            throw new Error('Campanha não encontrada.');
+        }
 
-        const campanha = await prisma.campanha.findUnique({ where: { id } });
-        if (!campanha) throw new Error('Campanha não encontrada.');
-
+        const campanha = aposta.campanha_opcao.campanha;
         if (campanha.criador_id !== usuarioId) {
             throw new Error('Apenas o criador da campanha pode alterar o status.');
         }
 
         const statusPermitidos = ['CONFIRMADA', 'REJEITADA'];
-
         if (novoStatus !== ApostaStatus.CONFIRMADA && novoStatus !== ApostaStatus.REJEITADA) {
             throw new Error('Status inválido. Use CONFIRMADA ou REJEITADA.');
         }
+
         return await prisma.aposta.update({
             where: { id },
             data: { status: novoStatus }
@@ -245,6 +254,42 @@ export class ApostaService {
                 },
                 meio_pagamento: true,
             }
+        });
+    }
+
+    async definirVencedor({ campanha_id, opcao_id }: DefinirResultadoInputDTO) {
+        const campanha = await prisma.campanha.findUnique({
+            where: { id: campanha_id },
+        });
+
+        if (!campanha) {
+            throw new Error('Campanha não encontrada.');
+        }
+
+        if (campanha.status !== 'ENCERRADA') {
+            throw new Error('A campanha precisa estar com o status ENCERRADA para definir o resultado final.');
+        }
+
+        const opcao = await prisma.campanha_opcao.findUnique({
+            where: { id: opcao_id },
+        });
+
+        if (!opcao || opcao.campanha_id !== campanha_id) {
+            throw new Error('A opção informada não pertence a esta campanha.');
+        }
+
+        return await prisma.$transaction(async (tx) => {
+            await tx.campanha_opcao.updateMany({
+                where: { campanha_id },
+                data: { eh_resultado_final: false },
+            });
+
+            const opcaoVencedora = await tx.campanha_opcao.update({
+                where: { id: opcao_id },
+                data: { eh_resultado_final: true },
+            });
+
+            return opcaoVencedora;
         });
     }
 }

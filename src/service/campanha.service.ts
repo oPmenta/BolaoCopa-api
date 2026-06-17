@@ -6,7 +6,6 @@ export class CampanhaService {
     async criar(data: CriarCampanhaInputDTO, usuarioId: number) {
         const {
             nome,
-            dt_inicio,
             dt_fim,
             taxa_operacional,
             valor_bolao,
@@ -53,14 +52,11 @@ export class CampanhaService {
             throw new Error('Tipo de usuário inválido.');
         }
 
-        const dataInicio = new Date(dt_inicio);
+        const dataInicio = new Date();
         const dataFim = new Date(dt_fim);
         const agora = new Date();
         if (isNaN(dataInicio.getTime()) || isNaN(dataFim.getTime())) {
             throw new Error('Datas inválidas.');
-        }
-        if (dataInicio <= agora) {
-            throw new Error('Data de início deve ser futura.');
         }
         if (dataFim <= dataInicio) {
             throw new Error('Data de fim deve ser posterior ao início.');
@@ -129,7 +125,7 @@ export class CampanhaService {
 
     async listarApenasPublicas() {
         const tipoPublica = await prisma.tipo_campanha.findFirst({
-            where: { descricao: { equals: 'PÚBLICA', mode: 'insensitive' } }
+            where: { descricao: { equals: 'PUBLICA', mode: 'insensitive' } }
         });
         if (!tipoPublica) return [];
 
@@ -175,6 +171,10 @@ export class CampanhaService {
             codigoConvite: campanha.codigo_campanha,
             valorAposta: campanha.valor_bolao,
             criadorId: campanha.criador_id,
+            opcoes: campanha.opcoes.map(op => ({
+                ...op,
+                ehVencedora: op.eh_resultado_final,
+            })),
         };
     }
 

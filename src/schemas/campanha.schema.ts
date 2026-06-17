@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 export const CriarCampanhaSchema = z.object({
   nome: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
-  dt_inicio: z.string().datetime('Data de início inválida'),
   dt_fim: z.string().datetime('Data de fim inválida'),
   taxa_operacional: z.number().min(0, 'Taxa operacional não pode ser negativa'),
   valor_bolao: z.number().min(0.01, 'Valor do bolão deve ser maior que 0'),

@@ -15,6 +15,18 @@ export class CampanhaOpcaoService {
       throw new Error('A campanha precisa estar com o status ENCERRADA para definir o resultado final.');
     }
 
+    // 🔥 VERIFICA SE JÁ EXISTE UM RESULTADO DEFINIDO
+    const resultadoExistente = await prisma.campanha_opcao.findFirst({
+      where: {
+        campanha_id,
+        eh_resultado_final: true,
+      },
+    });
+
+    if (resultadoExistente) {
+      throw new Error('O resultado já foi definido e não pode ser alterado.');
+    }
+
     const opcao = await prisma.campanha_opcao.findUnique({
       where: { id: opcao_id },
     });
@@ -39,8 +51,12 @@ export class CampanhaOpcaoService {
   }
 
   async listarPorCampanha(campanha_id: number) {
-    return await prisma.campanha_opcao.findMany({
+    const opcoes = await prisma.campanha_opcao.findMany({
       where: { campanha_id },
     });
+    return opcoes.map(op => ({
+      ...op,
+      ehVencedora: op.eh_resultado_final,
+    }));
   }
 }

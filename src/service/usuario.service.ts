@@ -8,13 +8,19 @@ import { jwtConfig } from '../config/jwt.config';
 
 export class UsuarioService {
   async criar(dados: CriarUsuarioInputDTO) {
-    console.log('Dados recebidos no backend:', dados);
+    // Validação: email já existente?
     const usuarioExistente = await prisma.usuario.findUnique({
       where: { email: dados.email }
     });
-
     if (usuarioExistente) {
       throw new AppError('E-mail já cadastrado.', 400);
+    }
+
+    const cpfExistente = await prisma.usuario.findUnique({
+      where: { cpf: dados.cpf }
+    });
+    if (cpfExistente) {
+      throw new AppError('CPF já cadastrado.', 400);
     }
 
     const tipoUsuarioFormatado = dados.tipo_usuario
@@ -23,7 +29,6 @@ export class UsuarioService {
 
     const senhaHash = await bcrypt.hash(dados.senha, 10);
 
-    // Criação explícita, sem espalhar o objeto inteiro
     return await prisma.usuario.create({
       data: {
         nome: dados.nome,
