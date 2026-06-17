@@ -55,6 +55,25 @@ export class CampanhaController {
         }
     }
 
+    async listarMinhas(req: Request, res: Response): Promise<Response> {
+        try {
+            const usuarioId = Number((req as any).usuarioId);
+            if (isNaN(usuarioId)) {
+                return res.status(401).json({ success: false, message: 'Usuário não autenticado' });
+            }
+            const campanhas = await campanhaService.listarPorCriador(usuarioId);
+            return res.status(200).json({
+                success: true,
+                data: campanhas,
+            });
+        } catch (error: any) {
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Erro ao listar suas campanhas.',
+            });
+        }
+    }
+
     async buscarPorCodigo(req: Request, res: Response): Promise<Response> {
         try {
             const { codigo } = req.params;

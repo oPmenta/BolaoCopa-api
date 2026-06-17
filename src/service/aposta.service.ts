@@ -36,6 +36,26 @@ export class ApostaService {
             throw new Error(`Não é possível apostar nesta campanha. Status atual: ${campanha.status}`);
         }
 
+        const apostaExistente = await prisma.aposta.findFirst({
+            where: {
+                usuario_id,
+                campanha_opcao: {
+                    campanha_id: campanha.id,
+                },
+                status: {
+                    in: ['PENDENTE', 'AGUARDANDO_VALIDACAO', 'CONFIRMADA'],
+                },
+            },
+        });
+
+        if (apostaExistente) {
+            if (apostaExistente.status === 'CONFIRMADA') {
+                throw new Error('Você já possui uma aposta confirmada nesta campanha e não pode fazer outra.');
+            } else {
+                throw new Error('Você já possui uma aposta ativa nesta campanha. Aguarde a validação ou edite-a.');
+            }
+        }
+
         const novaAposta = await prisma.aposta.create({
             data: {
                 usuario_id,
@@ -54,7 +74,7 @@ export class ApostaService {
     }
 
     async listarPorUsuario(usuario_id: number) {
-        return await prisma.aposta.findMany({
+        const apostas = await prisma.aposta.findMany({
             where: { usuario_id },
             include: {
                 campanha_opcao: {
@@ -66,6 +86,62 @@ export class ApostaService {
             },
             orderBy: { dt_criacao: 'desc' },
         });
+
+        return apostas.map(aposta => ({
+            ...aposta,
+            idCampanha: aposta.campanha_opcao.campanha.id,
+            idOpcao: aposta.campanha_opcao.id,
+            opcao: aposta.campanha_opcao,
+            campanha: aposta.campanha_opcao.campanha,
+        }));
+    }
+
+    async listarPorCampanha(campanhaId: number) {
+        const apostas = await prisma.aposta.findMany({
+            where: {
+                campanha_opcao: {
+                    campanha_id: campanhaId,
+                },
+            },
+            include: {
+                usuario: {
+                    select: {
+                        id: true,
+                        nome: true,
+                        email: true,
+                    },
+                },
+                campanha_opcao: {
+                    select: {
+                        id: true,
+                        descricao: true,
+                    },
+                },
+                meio_pagamento: {
+                    select: {
+                        id: true,
+                        descricao: true,
+                    },
+                },
+            },
+            orderBy: {
+                dt_criacao: 'desc',
+            },
+        });
+
+        // Mapeia para o formato esperado pelo frontend
+        return apostas.map(aposta => ({
+            id: aposta.id,
+            idCampanha: campanhaId,
+            idUsuario: aposta.usuario_id,
+            idOpcao: aposta.campanha_opcao_id,
+            status: aposta.status,
+            comprovante: aposta.comprovante,
+            criadoEm: aposta.dt_criacao,
+            usuario: aposta.usuario,
+            opcao: aposta.campanha_opcao,
+            meioPagamento: aposta.meio_pagamento,
+        }));
     }
 
     async anexarComprovante(id: number, comprovantePath: string) {
@@ -105,6 +181,70 @@ export class ApostaService {
         return await prisma.aposta.update({
             where: { id },
             data: { status: novoStatus }
+        });
+    }
+
+    async atualizarAposta(
+        id: number,
+        data: {
+            campanha_opcao_id: number;
+            meio_pagamento_id: number;
+            comprovante?: string;
+        },
+        usuarioId: number
+    ) {
+        // Valida se os IDs são números positivos
+        if (isNaN(data.campanha_opcao_id) || data.campanha_opcao_id <= 0) {
+            throw new Error('ID da opção de campanha inválido.');
+        }
+        if (isNaN(data.meio_pagamento_id) || data.meio_pagamento_id <= 0) {
+            throw new Error('ID do meio de pagamento inválido.');
+        }
+
+        const aposta = await prisma.aposta.findUnique({ where: { id } });
+        if (!aposta) throw new Error('Aposta não encontrada.');
+        if (aposta.usuario_id !== usuarioId) {
+            throw new Error('Você não pode editar esta aposta.');
+        }
+        if (aposta.status === 'CONFIRMADA' || aposta.status === 'REJEITADA') {
+            throw new Error('Aposta já confirmada ou rejeitada, não pode ser editada.');
+        }
+
+        // Verifica se a nova opção pertence à mesma campanha (opcional)
+        const opcao = await prisma.campanha_opcao.findUnique({
+            where: { id: data.campanha_opcao_id },
+        });
+        if (!opcao) throw new Error('Opção de campanha não encontrada.');
+
+        // Verifica se a opção pertence à campanha da aposta (via campanha original)
+        // Apenas para segurança
+        const campanhaIdOriginal = await prisma.campanha_opcao.findUnique({
+            where: { id: aposta.campanha_opcao_id },
+            select: { campanha_id: true },
+        });
+        if (campanhaIdOriginal?.campanha_id !== opcao.campanha_id) {
+            throw new Error('A opção escolhida não pertence à mesma campanha.');
+        }
+
+        let novoStatus = aposta.status;
+        if (data.comprovante && aposta.status === 'PENDENTE') {
+            novoStatus = 'AGUARDANDO_VALIDACAO';
+        }
+
+        return await prisma.aposta.update({
+            where: { id },
+            data: {
+                campanha_opcao_id: data.campanha_opcao_id,
+                meio_pagamento_id: data.meio_pagamento_id,
+                comprovante: data.comprovante ?? aposta.comprovante,
+                status: novoStatus,
+            },
+            include: {
+                campanha_opcao: {
+                    include: { campanha: true }
+                },
+                meio_pagamento: true,
+            }
         });
     }
 }

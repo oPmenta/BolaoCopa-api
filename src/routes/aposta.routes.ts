@@ -90,6 +90,31 @@ apostaRoutes.get(
 
 /**
  * @swagger
+ * /apostas/campanha/{idCampanha}:
+ *   get:
+ *     summary: Lista todas as apostas de uma campanha (apenas criador/admin)
+ *     tags: [Apostas]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: idCampanha
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de apostas retornada.
+ *       403:
+ *         description: Apenas o criador pode ver.
+ */
+apostaRoutes.get(
+    '/apostas/campanha/:idCampanha',
+    authMiddleware,
+    apostaController.listarPorCampanha
+);
+
+/**
+ * @swagger
  * /apostas/{idAposta}/comprovante:
  *   patch:
  *     summary: Anexa ou substitui o comprovante de uma aposta existente
@@ -170,6 +195,44 @@ apostaRoutes.patch(
     '/apostas/:idAposta/status',
     authMiddleware,
     apostaController.atualizarStatus
+);
+
+/**
+ * @swagger
+ * /apostas/{idAposta}:
+ *   patch:
+ *     summary: Atualiza uma aposta existente (apenas se pendente/aguardando)
+ *     tags: [Apostas]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: idAposta
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               campanha_opcao_id:
+ *                 type: number
+ *               meio_pagamento_id:
+ *                 type: number
+ *               comprovante:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Aposta atualizada.
+ */
+apostaRoutes.patch(
+    '/apostas/:idAposta',
+    authMiddleware,
+    upload.single('comprovante'),
+    apostaController.atualizarAposta
 );
 
 export { apostaRoutes };

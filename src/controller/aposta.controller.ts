@@ -1,16 +1,22 @@
 import { Request, Response } from 'express';
 import { ApostaService } from '../service/aposta.service';
+import { prisma } from '../database/prismaClient';
 
 const apostaService = new ApostaService();
 
 export class ApostaController {
   async criar(req: Request, res: Response): Promise<Response> {
     try {
-      const { usuario_id, campanha_opcao_id, meio_pagamento_id } = req.body;
+      const { campanha_opcao_id, meio_pagamento_id } = req.body;
       const comprovante = req.file ? req.file.path : undefined;
+      const usuario_id = Number((req as any).usuarioId);
+
+      if (isNaN(usuario_id)) {
+        return res.status(401).json({ success: false, message: 'Usuário não autenticado' });
+      }
 
       const novaAposta = await apostaService.criar({
-        usuario_id: Number(usuario_id),
+        usuario_id,
         campanha_opcao_id: Number(campanha_opcao_id),
         meio_pagamento_id: Number(meio_pagamento_id),
         comprovante
@@ -29,6 +35,53 @@ export class ApostaController {
       return res.status(200).json({ success: true, data: apostas });
     } catch (error: any) {
       return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async listarPorCampanha(req: Request, res: Response): Promise<Response> {
+    try {
+      const idCampanha = Number(req.params.idCampanha);
+      if (isNaN(idCampanha)) {
+        return res.status(400).json({ success: false, message: 'ID da campanha inválido.' });
+      }
+
+      const usuarioId = Number((req as any).usuarioId);
+      if (isNaN(usuarioId)) {
+        return res.status(401).json({ success: false, message: 'Usuário não autenticado.' });
+      }
+
+      const campanha = await prisma.campanha.findUnique({
+        where: { id: idCampanha },
+      });
+      if (!campanha) {
+        return res.status(404).json({ success: false, message: 'Campanha não encontrada.' });
+      }
+
+      const usuario = await prisma.usuario.findUnique({
+        where: { id: usuarioId },
+      });
+      if (!usuario) {
+        return res.status(401).json({ success: false, message: 'Usuário não encontrado.' });
+      }
+
+      if (campanha.criador_id !== usuarioId && usuario.tipo_usuario !== 'ADMIN') {
+        return res.status(403).json({
+          success: false,
+          message: 'Apenas o criador da campanha pode ver as apostas.'
+        });
+      }
+
+      const apostas = await apostaService.listarPorCampanha(idCampanha);
+
+      return res.status(200).json({
+        success: true,
+        data: apostas,
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Erro ao listar apostas da campanha.'
+      });
     }
   }
 
@@ -64,6 +117,52 @@ export class ApostaController {
         success: true,
         message: `Status da aposta atualizado para ${status} com sucesso!`,
         data: apostaAtualizada
+      });
+    } catch (error: any) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
+  async atualizarAposta(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = Number(req.params.idAposta);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ success: false, message: 'ID da aposta inválido.' });
+      }
+
+      const usuarioId = Number((req as any).usuarioId);
+      if (isNaN(usuarioId) || usuarioId <= 0) {
+        return res.status(401).json({ success: false, message: 'Usuário não autenticado.' });
+      }
+
+      const { campanha_opcao_id, meio_pagamento_id } = req.body;
+      const comprovante = req.file ? req.file.path : undefined;
+
+      // Converte para número e valida
+      const campanhaOpcaoId = Number(campanha_opcao_id);
+      const meioPagamentoId = Number(meio_pagamento_id);
+
+      if (isNaN(campanhaOpcaoId) || campanhaOpcaoId <= 0) {
+        return res.status(400).json({ success: false, message: 'ID da opção de campanha inválido.' });
+      }
+      if (isNaN(meioPagamentoId) || meioPagamentoId <= 0) {
+        return res.status(400).json({ success: false, message: 'ID do meio de pagamento inválido.' });
+      }
+
+      const apostaAtualizada = await apostaService.atualizarAposta(
+        id,
+        {
+          campanha_opcao_id: campanhaOpcaoId,
+          meio_pagamento_id: meioPagamentoId,
+          comprovante
+        },
+        usuarioId
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Aposta atualizada com sucesso!',
+        data: apostaAtualizada,
       });
     } catch (error: any) {
       return res.status(400).json({ success: false, message: error.message });

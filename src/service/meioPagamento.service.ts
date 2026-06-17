@@ -29,7 +29,11 @@ export class MeioPagamentoService {
     }
 
     async listarTodos() {
-        return await prisma.meio_pagamento.findMany();
+        const meios = await prisma.meio_pagamento.findMany();
+        return meios.map(m => ({
+            ...m,
+            ativo: m.status === 'ATIVO'
+        }));
     }
 
     async atualizarStatus(id: number, novoStatus: string) {

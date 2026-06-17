@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { CampanhaController } from '../controller/campanha.controller';
 import { validateRequest } from '../middlewares/validateSchema';
 import { CriarCampanhaSchema, AtualizarStatusCampanhaSchema } from '../schemas/campanha.schema';
-import { authMiddleware } from '../middlewares/authMiddleware'; 
+import { authMiddleware } from '../middlewares/authMiddleware';
 import { isAdmin } from '../middlewares/isAdmin';
 
 const campanhaRoutes = Router();
@@ -111,6 +111,21 @@ campanhaRoutes.get('/campanhas', authMiddleware, isAdmin, campanhaController.lis
  *         description: "Erro interno do servidor"
  */
 campanhaRoutes.get('/campanhas/publicas', authMiddleware, campanhaController.listarPublicas);
+
+/**
+ * @swagger
+ * /campanhas/minhas:
+ *   get:
+ *     summary: "Lista campanhas criadas pelo usuário autenticado"
+ *     tags: [Campanhas]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Campanhas do usuário retornadas.
+ *       401:
+ *         description: Não autenticado.
+ */
+campanhaRoutes.get('/campanhas/minhas', authMiddleware, campanhaController.listarMinhas);
 
 /**
  * @swagger

@@ -19,6 +19,11 @@ export class CampanhaService {
             throw new Error('A campanha deve ter pelo menos 2 opções de aposta.');
         }
 
+        const valorBolaoNum = Number(valor_bolao);
+        if (isNaN(valorBolaoNum) || valorBolaoNum <= 0) {
+            throw new Error('Valor do bolão deve ser um número maior que zero.');
+        }
+
         const opcoesUnicas = [...new Set(opcoes.map(o => o.trim().toUpperCase()))];
         if (opcoesUnicas.length !== opcoes.length) {
             throw new Error('Opções duplicadas não são permitidas.');
@@ -72,8 +77,8 @@ export class CampanhaService {
                     nome,
                     dt_inicio: dataInicio,
                     dt_fim: dataFim,
-                    taxa_operacional: Number(taxa_operacional),
-                    valor_bolao: Number(valor_bolao),
+                    taxa_operacional: Number(taxa_operacional) || 0,
+                    valor_bolao: valorBolaoNum,
                     codigo_campanha: codigo_campanha.toUpperCase().trim(),
                     status: 'ABERTA',
                     criador_id: usuarioId,
@@ -103,6 +108,7 @@ export class CampanhaService {
                 ...campanhaCriada,
                 tipo: campanhaCriada.tipo_campanha.descricao,
                 codigoConvite: campanhaCriada.codigo_campanha,
+                valorAposta: campanhaCriada.valor_bolao,
             };
         });
 
@@ -117,6 +123,7 @@ export class CampanhaService {
             ...c,
             tipo: c.tipo_campanha.descricao,
             codigoConvite: c.codigo_campanha,
+            valorAposta: c.valor_bolao,
         }));
     }
 
@@ -137,6 +144,21 @@ export class CampanhaService {
             ...c,
             tipo: c.tipo_campanha.descricao,
             codigoConvite: c.codigo_campanha,
+            valorAposta: c.valor_bolao,
+        }));
+    }
+
+    async listarPorCriador(criadorId: number) {
+        const campanhas = await prisma.campanha.findMany({
+            where: { criador_id: criadorId },
+            include: { tipo_campanha: true, opcoes: true },
+            orderBy: { dt_inicio: 'desc' },
+        });
+        return campanhas.map(c => ({
+            ...c,
+            tipo: c.tipo_campanha.descricao,
+            codigoConvite: c.codigo_campanha,
+            valorAposta: c.valor_bolao,
         }));
     }
 
@@ -151,6 +173,8 @@ export class CampanhaService {
             ...campanha,
             tipo: campanha.tipo_campanha.descricao,
             codigoConvite: campanha.codigo_campanha,
+            valorAposta: campanha.valor_bolao,
+            criadorId: campanha.criador_id,
         };
     }
 
