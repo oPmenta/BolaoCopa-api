@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import swaggerUi from 'swagger-ui-express';
-import cors from 'cors'; // <-- adicionado
+import cors from 'cors';
 import path from 'path';
 
 import { errorHandler } from './middlewares/errorHandler';
@@ -16,15 +16,10 @@ import { apostaRoutes } from './routes/aposta.routes';
 
 const app = express();
 
-// ===== CONFIGURAÇÃO CORS =====
-// Em desenvolvimento, permita todas as origens (ou especifique a do frontend)
 app.use(cors({
-  origin: 'http://localhost:5173', // URL do frontend
+  origin: 'http://localhost:5173',
   credentials: true,
 }));
-// Se quiser permitir qualquer origem (mais permissivo, não recomendado em produção):
-// app.use(cors());
-// ==============================
 
 app.use(express.json());
 

@@ -28,20 +28,22 @@ model tipo_campanha {
 }
 
 model campanha {
-  id               Int              @id @default(autoincrement())
-  nome             String
-  dt_inicio        DateTime
-  dt_fim           DateTime
-  taxa_operacional Float
-  valor_bolao      Float
-  codigo_campanha  String           @unique
-  status           String           @default("ABERTA")
-  criadoEm         DateTime         @default(now())
-  criador_id       Int
-  criador          usuario          @relation(fields: [criador_id], references: [id])
-  tipo_campanha_id Int
-  tipo_campanha    tipo_campanha    @relation(fields: [tipo_campanha_id], references: [id])
-  opcoes           campanha_opcao[]
+  id                Int              @id @default(autoincrement())
+  nome              String
+  dt_inicio         DateTime
+  dt_fim            DateTime
+  taxa_operacional  Float
+  valor_bolao       Float
+  codigo_campanha   String           @unique
+  status            String           @default("ABERTA")
+  criadoEm          DateTime         @default(now())
+  criador_id        Int
+  criador           usuario          @relation(fields: [criador_id], references: [id])
+  tipo_campanha_id  Int
+  tipo_campanha     tipo_campanha    @relation(fields: [tipo_campanha_id], references: [id])
+  meio_pagamento_id Int?
+  meio_pagamento    meio_pagamento? @relation(fields: [meio_pagamento_id], references: [id])
+  opcoes            campanha_opcao[]
 }
 
 model campanha_opcao {
@@ -59,8 +61,10 @@ model campanha_opcao {
 model meio_pagamento {
   id        Int      @id @default(autoincrement())
   descricao String
+  chave     String?
   status    String   @default("ATIVO")
   apostas   aposta[]
+  campanhas campanha[]
 }
 
 model aposta {
@@ -72,7 +76,7 @@ model aposta {
   meio_pagamento_id Int
   meio_pagamento    meio_pagamento   @relation(fields: [meio_pagamento_id], references: [id])
   dt_criacao        DateTime         @default(now())
-  status           ApostaStatus     @default(PENDENTE)
+  status            ApostaStatus     @default(PENDENTE)
   comprovante       String?
 }
 

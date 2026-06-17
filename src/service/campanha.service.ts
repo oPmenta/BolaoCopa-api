@@ -11,7 +11,8 @@ export class CampanhaService {
             valor_bolao,
             codigo_campanha,
             tipo_campanha_id,
-            opcoes
+            opcoes,
+            chave_pix,
         } = data;
 
         if (!opcoes || opcoes.length < 2) {
@@ -21,6 +22,10 @@ export class CampanhaService {
         const valorBolaoNum = Number(valor_bolao);
         if (isNaN(valorBolaoNum) || valorBolaoNum <= 0) {
             throw new Error('Valor do bolão deve ser um número maior que zero.');
+        }
+
+        if (!chave_pix || chave_pix.trim() === '') {
+            throw new Error('Chave PIX é obrigatória.');
         }
 
         const opcoesUnicas = [...new Set(opcoes.map(o => o.trim().toUpperCase()))];
@@ -34,7 +39,7 @@ export class CampanhaService {
         let tipoFinal: number;
         if (criador.tipo_usuario === Role.USER) {
             const tipoPrivada = await prisma.tipo_campanha.findFirst({
-                where: { descricao: { equals: 'PRIVADA', mode: 'insensitive' } }
+                where: { descricao: { equals: 'PRIVADA', mode: 'insensitive' } },
             });
             if (!tipoPrivada) throw new Error('Tipo PRIVADA não encontrado.');
             tipoFinal = tipoPrivada.id;
@@ -54,7 +59,6 @@ export class CampanhaService {
 
         const dataInicio = new Date();
         const dataFim = new Date(dt_fim);
-        const agora = new Date();
         if (isNaN(dataInicio.getTime()) || isNaN(dataFim.getTime())) {
             throw new Error('Datas inválidas.');
         }
@@ -67,18 +71,28 @@ export class CampanhaService {
         });
         if (codigoExiste) throw new Error('Código de campanha já existe.');
 
+        let meioPagamento = await prisma.meio_pagamento.findFirst({
+            where: { chave: chave_pix, descricao: 'PIX' },
+        });
+        if (!meioPagamento) {
+            meioPagamento = await prisma.meio_pagamento.create({
+                data: { descricao: 'PIX', chave: chave_pix, status: 'ATIVO' },
+            });
+        }
+
         const result = await prisma.$transaction(async (tx) => {
             const novaCampanha = await tx.campanha.create({
                 data: {
                     nome,
                     dt_inicio: dataInicio,
                     dt_fim: dataFim,
-                    taxa_operacional: Number(taxa_operacional) || 0,
-                    valor_bolao: valorBolaoNum,
+                    taxa_operacional: Number(taxa_operacional),
+                    valor_bolao: Number(valor_bolao),
                     codigo_campanha: codigo_campanha.toUpperCase().trim(),
                     status: 'ABERTA',
                     criador_id: usuarioId,
                     tipo_campanha_id: tipoFinal,
+                    meio_pagamento_id: meioPagamento.id,
                 },
             });
 
@@ -93,7 +107,11 @@ export class CampanhaService {
 
             const campanhaCriada = await tx.campanha.findUnique({
                 where: { id: novaCampanha.id },
-                include: { opcoes: true, tipo_campanha: true },
+                include: {
+                    opcoes: true,
+                    tipo_campanha: true,
+                    meio_pagamento: true,
+                },
             });
 
             if (!campanhaCriada) {
@@ -105,6 +123,8 @@ export class CampanhaService {
                 tipo: campanhaCriada.tipo_campanha.descricao,
                 codigoConvite: campanhaCriada.codigo_campanha,
                 valorAposta: campanhaCriada.valor_bolao,
+                chavePix: campanhaCriada.meio_pagamento?.chave,
+                criadorId: campanhaCriada.criador_id,
             };
         });
 
@@ -113,13 +133,15 @@ export class CampanhaService {
 
     async listarTodas() {
         const campanhas = await prisma.campanha.findMany({
-            include: { tipo_campanha: true },
+            include: { tipo_campanha: true, meio_pagamento: true },
         });
         return campanhas.map(c => ({
             ...c,
             tipo: c.tipo_campanha.descricao,
             codigoConvite: c.codigo_campanha,
             valorAposta: c.valor_bolao,
+            chavePix: c.meio_pagamento?.chave,
+            criadorId: c.criador_id,
         }));
     }
 
@@ -134,20 +156,22 @@ export class CampanhaService {
                 tipo_campanha_id: tipoPublica.id,
                 status: 'ABERTA',
             },
-            include: { tipo_campanha: true },
+            include: { tipo_campanha: true, meio_pagamento: true },
         });
         return campanhas.map(c => ({
             ...c,
             tipo: c.tipo_campanha.descricao,
             codigoConvite: c.codigo_campanha,
             valorAposta: c.valor_bolao,
+            chavePix: c.meio_pagamento?.chave,
+            criadorId: c.criador_id,
         }));
     }
 
     async listarPorCriador(criadorId: number) {
         const campanhas = await prisma.campanha.findMany({
             where: { criador_id: criadorId },
-            include: { tipo_campanha: true, opcoes: true },
+            include: { tipo_campanha: true, opcoes: true, meio_pagamento: true },
             orderBy: { dt_inicio: 'desc' },
         });
         return campanhas.map(c => ({
@@ -155,6 +179,8 @@ export class CampanhaService {
             tipo: c.tipo_campanha.descricao,
             codigoConvite: c.codigo_campanha,
             valorAposta: c.valor_bolao,
+            chavePix: c.meio_pagamento?.chave,
+            criadorId: c.criador_id,
         }));
     }
 
@@ -162,7 +188,11 @@ export class CampanhaService {
         if (!codigo) throw new Error('Código obrigatório.');
         const campanha = await prisma.campanha.findUnique({
             where: { codigo_campanha: codigo.toUpperCase().trim() },
-            include: { tipo_campanha: true, opcoes: true },
+            include: {
+                tipo_campanha: true,
+                opcoes: true,
+                meio_pagamento: true,
+            },
         });
         if (!campanha) throw new Error('Campanha não encontrada.');
         return {
@@ -171,6 +201,7 @@ export class CampanhaService {
             codigoConvite: campanha.codigo_campanha,
             valorAposta: campanha.valor_bolao,
             criadorId: campanha.criador_id,
+            chavePix: campanha.meio_pagamento?.chave,
             opcoes: campanha.opcoes.map(op => ({
                 ...op,
                 ehVencedora: op.eh_resultado_final,

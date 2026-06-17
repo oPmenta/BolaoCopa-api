@@ -7,7 +7,7 @@ const apostaService = new ApostaService();
 export class ApostaController {
   async criar(req: Request, res: Response): Promise<Response> {
     try {
-      const { campanha_opcao_id, meio_pagamento_id } = req.body;
+      const { campanha_opcao_id } = req.body;
       const comprovante = req.file ? req.file.path : undefined;
       const usuario_id = Number((req as any).usuarioId);
 
@@ -18,9 +18,9 @@ export class ApostaController {
       const novaAposta = await apostaService.criar({
         usuario_id,
         campanha_opcao_id: Number(campanha_opcao_id),
-        meio_pagamento_id: Number(meio_pagamento_id),
         comprovante
       });
+
       return res.status(201).json({ success: true, data: novaAposta });
     } catch (error: any) {
       return res.status(400).json({ success: false, message: error.message });
@@ -135,27 +135,17 @@ export class ApostaController {
         return res.status(401).json({ success: false, message: 'Usuário não autenticado.' });
       }
 
-      const { campanha_opcao_id, meio_pagamento_id } = req.body;
+      const { campanha_opcao_id } = req.body;
       const comprovante = req.file ? req.file.path : undefined;
 
-      // Converte para número e valida
       const campanhaOpcaoId = Number(campanha_opcao_id);
-      const meioPagamentoId = Number(meio_pagamento_id);
-
       if (isNaN(campanhaOpcaoId) || campanhaOpcaoId <= 0) {
         return res.status(400).json({ success: false, message: 'ID da opção de campanha inválido.' });
-      }
-      if (isNaN(meioPagamentoId) || meioPagamentoId <= 0) {
-        return res.status(400).json({ success: false, message: 'ID do meio de pagamento inválido.' });
       }
 
       const apostaAtualizada = await apostaService.atualizarAposta(
         id,
-        {
-          campanha_opcao_id: campanhaOpcaoId,
-          meio_pagamento_id: meioPagamentoId,
-          comprovante
-        },
+        { campanha_opcao_id: campanhaOpcaoId, comprovante },
         usuarioId
       );
 

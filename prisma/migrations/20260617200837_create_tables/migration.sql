@@ -41,6 +41,7 @@ CREATE TABLE "campanha" (
     "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "criador_id" INTEGER NOT NULL,
     "tipo_campanha_id" INTEGER NOT NULL,
+    "meio_pagamento_id" INTEGER,
 
     CONSTRAINT "campanha_pkey" PRIMARY KEY ("id")
 );
@@ -60,6 +61,7 @@ CREATE TABLE "campanha_opcao" (
 CREATE TABLE "meio_pagamento" (
     "id" SERIAL NOT NULL,
     "descricao" TEXT NOT NULL,
+    "chave" TEXT,
     "status" TEXT NOT NULL DEFAULT 'ATIVO',
 
     CONSTRAINT "meio_pagamento_pkey" PRIMARY KEY ("id")
@@ -95,6 +97,9 @@ ALTER TABLE "campanha" ADD CONSTRAINT "campanha_criador_id_fkey" FOREIGN KEY ("c
 
 -- AddForeignKey
 ALTER TABLE "campanha" ADD CONSTRAINT "campanha_tipo_campanha_id_fkey" FOREIGN KEY ("tipo_campanha_id") REFERENCES "tipo_campanha"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "campanha" ADD CONSTRAINT "campanha_meio_pagamento_id_fkey" FOREIGN KEY ("meio_pagamento_id") REFERENCES "meio_pagamento"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "campanha_opcao" ADD CONSTRAINT "campanha_opcao_campanha_id_fkey" FOREIGN KEY ("campanha_id") REFERENCES "campanha"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

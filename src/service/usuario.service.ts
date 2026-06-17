@@ -8,7 +8,6 @@ import { jwtConfig } from '../config/jwt.config';
 
 export class UsuarioService {
   async criar(dados: CriarUsuarioInputDTO) {
-    // Validação: email já existente?
     const usuarioExistente = await prisma.usuario.findUnique({
       where: { email: dados.email }
     });

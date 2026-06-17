@@ -15,7 +15,6 @@ export class CampanhaOpcaoService {
       throw new Error('A campanha precisa estar com o status ENCERRADA para definir o resultado final.');
     }
 
-    // 🔥 VERIFICA SE JÁ EXISTE UM RESULTADO DEFINIDO
     const resultadoExistente = await prisma.campanha_opcao.findFirst({
       where: {
         campanha_id,

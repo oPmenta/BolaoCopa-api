@@ -9,6 +9,7 @@ export const CriarCampanhaSchema = z.object({
   tipo_campanha_id: z.coerce.number().int().positive('ID do tipo de campanha inválido'),
   opcoes: z.array(z.string().min(2, 'Cada opção deve ter no mínimo 2 caracteres'))
     .min(2, 'É necessário pelo menos 2 opções para a campanha'),
+  chave_pix: z.string().min(3, 'Chave PIX é obrigatória'),
 });
 
 export const AtualizarStatusCampanhaSchema = z.object({

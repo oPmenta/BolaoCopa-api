@@ -4,9 +4,9 @@ import { DefinirResultadoInputDTO } from '../dtos/campanhaOpcao.dto';
 import { ApostaStatus } from '@prisma/client';
 
 export class ApostaService {
-    async criar({ usuario_id, campanha_opcao_id, meio_pagamento_id, comprovante }: CriarApostaInputDTO) {
-        if (!usuario_id || !campanha_opcao_id || !meio_pagamento_id) {
-            throw new Error('Usuário, Opção da Campanha e Meio de Pagamento são obrigatórios.');
+    async criar({ usuario_id, campanha_opcao_id, comprovante }: Omit<CriarApostaInputDTO, 'meio_pagamento_id'>) {
+        if (!usuario_id || !campanha_opcao_id) {
+            throw new Error('Usuário e Opção da Campanha são obrigatórios.');
         }
 
         const usuarioExiste = await prisma.usuario.findUnique({
@@ -14,28 +14,35 @@ export class ApostaService {
         });
         if (!usuarioExiste) throw new Error('Usuário não encontrado.');
 
-        const meioExiste = await prisma.meio_pagamento.findUnique({
-            where: { id: meio_pagamento_id },
-        });
-        if (!meioExiste) throw new Error('Meio de pagamento não encontrado.');
-        if (meioExiste.status !== 'ATIVO') throw new Error('Meio de pagamento indisponível.');
-
-        const opcaoExiste = await prisma.campanha_opcao.findUnique({
+        const opcao = await prisma.campanha_opcao.findUnique({
             where: { id: campanha_opcao_id },
+            include: {
+                campanha: {
+                    include: {
+                        meio_pagamento: true,
+                    },
+                },
+            },
         });
-        if (!opcaoExiste) throw new Error('Opção de aposta não encontrada.');
+        if (!opcao) throw new Error('Opção de aposta não encontrada.');
 
-        const campanha = await prisma.campanha.findUnique({
-            where: { id: opcaoExiste.campanha_id },
-        });
-
+        const campanha = opcao.campanha;
         if (!campanha) {
             throw new Error('Campanha associada a esta opção não foi encontrada.');
         }
 
         if (campanha.status !== 'ABERTA') {
-            throw new Error(`Não é possível apostar nesta campanha. Status atual: ${campanha.status}`);
+            throw new Error(`Não é possível apostar. Status da campanha: ${campanha.status}`);
         }
+
+        if (!campanha.meio_pagamento) {
+            throw new Error('Campanha não possui um meio de pagamento definido.');
+        }
+        if (campanha.meio_pagamento.status !== 'ATIVO') {
+            throw new Error('Meio de pagamento da campanha está indisponível.');
+        }
+
+        const meio_pagamento_id = campanha.meio_pagamento.id;
 
         const apostaExistente = await prisma.aposta.findFirst({
             where: {
@@ -51,10 +58,9 @@ export class ApostaService {
 
         if (apostaExistente) {
             if (apostaExistente.status === 'CONFIRMADA') {
-                throw new Error('Você já possui uma aposta confirmada nesta campanha e não pode fazer outra.');
-            } else {
-                throw new Error('Você já possui uma aposta ativa nesta campanha. Aguarde a validação ou edite-a.');
+                throw new Error('Você já possui uma aposta confirmada nesta campanha.');
             }
+            throw new Error('Você já possui uma aposta ativa nesta campanha. Aguarde a validação ou edite-a.');
         }
 
         const novaAposta = await prisma.aposta.create({
@@ -66,9 +72,11 @@ export class ApostaService {
                 comprovante: comprovante || null,
             },
             include: {
-                campanha_opcao: true,
+                campanha_opcao: {
+                    include: { campanha: true },
+                },
                 meio_pagamento: true,
-            }
+            },
         });
 
         return novaAposta;
@@ -130,7 +138,6 @@ export class ApostaService {
             },
         });
 
-        // Mapeia para o formato esperado pelo frontend
         return apostas.map(aposta => ({
             id: aposta.id,
             idCampanha: campanhaId,
@@ -163,7 +170,6 @@ export class ApostaService {
     }
 
     async atualizarStatus(id: number, novoStatus: ApostaStatus, usuarioId: number) {
-        // Busca a aposta com o relacionamento para a campanha
         const aposta = await prisma.aposta.findUnique({
             where: { id },
             include: {
@@ -197,17 +203,12 @@ export class ApostaService {
         id: number,
         data: {
             campanha_opcao_id: number;
-            meio_pagamento_id: number;
             comprovante?: string;
         },
         usuarioId: number
     ) {
-        // Valida se os IDs são números positivos
         if (isNaN(data.campanha_opcao_id) || data.campanha_opcao_id <= 0) {
             throw new Error('ID da opção de campanha inválido.');
-        }
-        if (isNaN(data.meio_pagamento_id) || data.meio_pagamento_id <= 0) {
-            throw new Error('ID do meio de pagamento inválido.');
         }
 
         const aposta = await prisma.aposta.findUnique({ where: { id } });
@@ -219,20 +220,25 @@ export class ApostaService {
             throw new Error('Aposta já confirmada ou rejeitada, não pode ser editada.');
         }
 
-        // Verifica se a nova opção pertence à mesma campanha (opcional)
         const opcao = await prisma.campanha_opcao.findUnique({
             where: { id: data.campanha_opcao_id },
         });
         if (!opcao) throw new Error('Opção de campanha não encontrada.');
 
-        // Verifica se a opção pertence à campanha da aposta (via campanha original)
-        // Apenas para segurança
         const campanhaIdOriginal = await prisma.campanha_opcao.findUnique({
             where: { id: aposta.campanha_opcao_id },
             select: { campanha_id: true },
         });
         if (campanhaIdOriginal?.campanha_id !== opcao.campanha_id) {
             throw new Error('A opção escolhida não pertence à mesma campanha.');
+        }
+
+        const campanha = await prisma.campanha.findUnique({
+            where: { id: opcao.campanha_id },
+            include: { meio_pagamento: true },
+        });
+        if (!campanha || !campanha.meio_pagamento) {
+            throw new Error('Campanha sem meio de pagamento definido.');
         }
 
         let novoStatus = aposta.status;
@@ -244,7 +250,7 @@ export class ApostaService {
             where: { id },
             data: {
                 campanha_opcao_id: data.campanha_opcao_id,
-                meio_pagamento_id: data.meio_pagamento_id,
+                meio_pagamento_id: campanha.meio_pagamento.id,
                 comprovante: data.comprovante ?? aposta.comprovante,
                 status: novoStatus,
             },
