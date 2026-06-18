@@ -1,93 +1,93 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
 }
 
-model TipoCampanha {
-  id        Int        @id @default(autoincrement())
-  descricao String
-  status    String  
-  
-  campanhas Campanha[]
-
-  @@map("tipo_campanha")
+generator client {
+  provider = "prisma-client-js"
 }
 
-model Campanha {
-  id               Int      @id @default(autoincrement())
-  nome             String
-  dt_inicio        DateTime
-  dt_fim           DateTime
-  taxa_operacional Float
-  valor_bolao      Float
-  codigo_campanha  String   @unique
-  status           String
-  
-  tipo_campanha_id Int
-  tipo_campanha    TipoCampanha @relation(fields: [tipo_campanha_id], references: [id])
-  
-  opcoes           CampanhaOpcoes[]
-
-  @@map("campanha")
-}
-
-model CampanhaOpcoes {
-  id                 Int      @id @default(autoincrement())
-  descricao          String
-  eh_resultado_final Boolean  @default(false)
-  status             String
-  
-  campanha_id        Int
-  campanha           Campanha @relation(fields: [campanha_id], references: [id])
-  
-  apostas            ApostaBolao[]
-
-  @@unique([campanha_id, descricao])
-  @@map("campanha_opcoes")
-}
-
-model Usuario {
+model usuario {
   id           Int      @id @default(autoincrement())
   nome         String
   cpf          String   @unique
   email        String   @unique
-  telefone     String?
-  tipo_usuario String?  
+  telefone     String
+  tipo_usuario Role     @default(USER)
   senha        String
-  status       String
-  
-  apostas      ApostaBolao[]
-
-  @@map("usuario")
+  status       String   @default("ATIVO")
+  criadoEm     DateTime @default(now())
+  apostas      aposta[]
+  campanhas    campanha[]
 }
 
-model MeioPagamento {
+model tipo_campanha {
+  id        Int        @id @default(autoincrement())
+  descricao String
+  status    String     @default("ATIVO")
+  campanhas campanha[]
+}
+
+model campanha {
+  id                Int              @id @default(autoincrement())
+  nome              String
+  dt_inicio         DateTime
+  dt_fim            DateTime
+  taxa_operacional  Float
+  valor_bolao       Float
+  codigo_campanha   String           @unique
+  status            String           @default("ABERTA")
+  criadoEm          DateTime         @default(now())
+  criador_id        Int
+  criador           usuario          @relation(fields: [criador_id], references: [id])
+  tipo_campanha_id  Int
+  tipo_campanha     tipo_campanha    @relation(fields: [tipo_campanha_id], references: [id])
+  meio_pagamento_id Int?
+  meio_pagamento    meio_pagamento? @relation(fields: [meio_pagamento_id], references: [id])
+  opcoes            campanha_opcao[]
+}
+
+model campanha_opcao {
+  id                 Int      @id @default(autoincrement())
+  campanha_id        Int
+  campanha           campanha @relation(fields: [campanha_id], references: [id])
+  descricao          String
+  status             String   @default("ATIVO")
+  eh_resultado_final Boolean  @default(false)
+  apostas            aposta[]
+
+  @@unique([campanha_id, descricao])
+}
+
+model meio_pagamento {
   id        Int      @id @default(autoincrement())
   descricao String
-  status    String
-  
-  apostas   ApostaBolao[]
-
-  @@map("meio_pagamento")
+  chave     String?
+  status    String   @default("ATIVO")
+  apostas   aposta[]
+  campanhas campanha[]
 }
 
-model ApostaBolao {
-  id                Int      @id @default(autoincrement())
-  dt_criacao        DateTime @default(now())
-  comprovante       String?
-  status            String
-  
+model aposta {
+  id                Int              @id @default(autoincrement())
   usuario_id        Int
-  usuario           Usuario @relation(fields: [usuario_id], references: [id])
-  
-  meio_pagamento_id Int
-  meio_pagamento    MeioPagamento @relation(fields: [meio_pagamento_id], references: [id])
-  
+  usuario           usuario          @relation(fields: [usuario_id], references: [id])
   campanha_opcao_id Int
-  campanha_opcao    CampanhaOpcoes @relation(fields: [campanha_opcao_id], references: [id])
+  campanha_opcao    campanha_opcao   @relation(fields: [campanha_opcao_id], references: [id])
+  meio_pagamento_id Int
+  meio_pagamento    meio_pagamento   @relation(fields: [meio_pagamento_id], references: [id])
+  dt_criacao        DateTime         @default(now())
+  status            ApostaStatus     @default(PENDENTE)
+  comprovante       String?
+}
 
-  @@map("aposta_bolao")
+enum ApostaStatus {
+  PENDENTE
+  AGUARDANDO_VALIDACAO
+  CONFIRMADA
+  REJEITADA
+}
+
+enum Role {
+  ADMIN
+  USER
 }

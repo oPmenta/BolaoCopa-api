@@ -1,41 +1,96 @@
 import { Router } from 'express';
 import { UsuarioController } from '../controller/usuario.controller';
+import { validateRequest } from '../middlewares/validateSchema';
+import { CriarUsuarioSchema, LoginSchema } from '../schemas/usuario.schema';
 
 const usuarioRoutes = Router();
 const usuarioController = new UsuarioController();
 
 /**
  * @swagger
- * /usuarios:
- *  post:
- *    summary: Cria um novo usuário
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            properties:
- *              nome:
- *                type: string
- *              cpf:
- *                type: string
- *              email:
- *                type: string
- *              telefone:
- *                type: string
- *              tipo_usuario:
- *                type: string
- *              senha:
- *                type: string
- *              status:
- *                type: string
- *    responses:
- *      201:
- *        description: Usuário criado com sucesso
- *      500:
- *        description: Erro interno do servidor
+ * /cadastro:
+ *   post:
+ *     summary: "Cria um novo usuário"
+ *     tags: 
+ *       - Usuário  
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nome
+ *               - cpf
+ *               - email
+ *               - telefone
+ *               - senha
+ *             properties:
+ *               nome:
+ *                 type: string
+ *                 example: "Thiago"
+ *               cpf:
+ *                 type: string
+ *                 example: "123.456.789-00"
+ *               email:
+ *                 type: string
+ *                 example: "thiago@gmail.com"
+ *               telefone:
+ *                 type: string
+ *                 example: "(34) 99999-9999"
+ *               tipo_usuario:
+ *                 type: string
+ *                 enum: [ADMIN, USER]
+ *                 default: "USER"
+ *                 example: "USER"
+ *               senha:
+ *                 type: string
+ *                 example: "admin"
+ *               status:
+ *                 type: string
+ *                 default: "ATIVO"
+ *                 example: "ATIVO"
+ *     responses:
+ *       201:
+ *         description: "Usuário criado com sucesso"
+ *       400:
+ *         description: "Erro de validação (ex: e-mail já cadastrado)"
+ *       500:
+ *         description: "Erro interno do servidor"
  */
-usuarioRoutes.post('/usuarios', usuarioController.criar);
+usuarioRoutes.post('/cadastro', validateRequest(CriarUsuarioSchema), usuarioController.criar);
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: "Realiza o login de um usuário e retorna um token JWT"
+ *     tags: 
+ *       - Autenticação  
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - senha
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "thiago@gmail.com"
+ *               senha:
+ *                 type: string
+ *                 example: "admin"
+ *     responses:
+ *       200:
+ *         description: "Login realizado com sucesso. Retorna token JWT."
+ *       401:
+ *         description: "E-mail ou senha inválidos"
+ *       400:
+ *         description: "E-mail e senha são obrigatórios"
+ */
+usuarioRoutes.post('/login', validateRequest(LoginSchema), usuarioController.login);
 
 export { usuarioRoutes };
